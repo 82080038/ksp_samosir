@@ -65,15 +65,15 @@
                 <!-- Statistics Cards -->
                 <div class="row mb-4">
                     <div class="col-md-6 col-xl-3 mb-4">
-                        <div class="card">
+                        <div class="card ksp-stats-card">
                             <div class="card-body">
                                 <div class="row">
                                     <div class="col">
-                                        <h5 class="card-title text-uppercase text-muted mb-0">Total Anggota</h5>
+                                        <h5 class="card-title text-uppercase mb-0">Total Anggota</h5>
                                         <span class="h2 font-weight-bold mb-0"><?= number_format($stats['total_anggota'] ?? 0) ?></span>
                                     </div>
                                     <div class="col-auto">
-                                        <div class="bg-primary text-white rounded p-3">
+                                        <div class="bg-white bg-opacity-25 rounded p-3">
                                             <i class="bi bi-people"></i>
                                         </div>
                                     </div>
@@ -83,15 +83,15 @@
                     </div>
                     
                     <div class="col-md-6 col-xl-3 mb-4">
-                        <div class="card">
+                        <div class="card ksp-stats-card">
                             <div class="card-body">
                                 <div class="row">
                                     <div class="col">
-                                        <h5 class="card-title text-uppercase text-muted mb-0">Total Simpanan</h5>
+                                        <h5 class="card-title text-uppercase mb-0">Total Simpanan</h5>
                                         <span class="h2 font-weight-bold mb-0">Rp <?= formatCurrency($stats['total_simpanan']) ?></span>
                                     </div>
                                     <div class="col-auto">
-                                        <div class="bg-success text-white rounded p-3">
+                                        <div class="bg-white bg-opacity-25 rounded p-3">
                                             <i class="bi bi-piggy-bank"></i>
                                         </div>
                                     </div>
@@ -101,15 +101,15 @@
                     </div>
                     
                     <div class="col-md-6 col-xl-3 mb-4">
-                        <div class="card">
+                        <div class="card ksp-stats-card">
                             <div class="card-body">
                                 <div class="row">
                                     <div class="col">
-                                        <h5 class="card-title text-uppercase text-muted mb-0">Total Pinjaman</h5>
+                                        <h5 class="card-title text-uppercase mb-0">Total Pinjaman</h5>
                                         <span class="h2 font-weight-bold mb-0">Rp <?= formatCurrency($stats['total_pinjaman']) ?></span>
                                     </div>
                                     <div class="col-auto">
-                                        <div class="bg-warning text-white rounded p-3">
+                                        <div class="bg-white bg-opacity-25 rounded p-3">
                                             <i class="bi bi-cash-stack"></i>
                                         </div>
                                     </div>
@@ -119,15 +119,15 @@
                     </div>
                     
                     <div class="col-md-6 col-xl-3 mb-4">
-                        <div class="card">
+                        <div class="card ksp-stats-card">
                             <div class="card-body">
                                 <div class="row">
                                     <div class="col">
-                                        <h5 class="card-title text-uppercase text-muted mb-0">Penjualan Bulan Ini</h5>
+                                        <h5 class="card-title text-uppercase mb-0">Penjualan Bulan Ini</h5>
                                         <span class="h2 font-weight-bold mb-0">Rp <?= formatCurrency($stats['penjualan_bulan']) ?></span>
                                     </div>
                                     <div class="col-auto">
-                                        <div class="bg-info text-white rounded p-3">
+                                        <div class="bg-white bg-opacity-25 rounded p-3">
                                             <i class="bi bi-cart3"></i>
                                         </div>
                                     </div>

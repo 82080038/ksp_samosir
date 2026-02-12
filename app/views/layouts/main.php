@@ -5,10 +5,11 @@
     <title><?= APP_NAME ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="<?= base_url('public/assets/css/style-blue.css') ?>" rel="stylesheet">
 </head>
 <body>
 <!-- Mobile Navbar -->
-<nav class="navbar navbar-dark bg-dark d-md-none fixed-top">
+<nav class="navbar navbar-dark bg-dark d-md-none fixed-top ksp-mobile-nav">
     <div class="container-fluid">
         <a class="navbar-brand" href="<?= base_url('dashboard') ?>"><?= APP_NAME ?></a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
@@ -19,7 +20,7 @@
 
 <div class="container-fluid" style="padding-top:56px;">
     <div class="row">
-        <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse text-white" style="min-height:100vh;">
+        <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse text-white ksp-sidebar" style="min-height:100vh;">
             <div class="position-sticky pt-3 px-3">
                 <div class="mb-4">
                     <div class="fw-bold"><?= APP_NAME ?></div>
