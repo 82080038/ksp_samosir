@@ -1,0 +1,25 @@
+-- Migration: Add additional indexes for performance
+-- Run this after initial schema setup
+
+ALTER TABLE anggota ADD INDEX idx_anggota_created_by (created_by);
+ALTER TABLE simpanan ADD INDEX idx_simpanan_anggota (anggota_id);
+ALTER TABLE simpanan ADD INDEX idx_simpanan_jenis (jenis_simpanan_id);
+ALTER TABLE transaksi_simpanan ADD INDEX idx_trans_simpanan_simpanan (simpanan_id);
+ALTER TABLE transaksi_simpanan ADD INDEX idx_trans_simpanan_user (user_id);
+ALTER TABLE transaksi_simpanan ADD INDEX idx_trans_simpanan_tanggal (tanggal_transaksi);
+ALTER TABLE pinjaman ADD INDEX idx_pinjaman_anggota (anggota_id);
+ALTER TABLE pinjaman ADD INDEX idx_pinjaman_jenis (jenis_pinjaman_id);
+ALTER TABLE pinjaman ADD INDEX idx_pinjaman_status (status);
+ALTER TABLE angsuran ADD INDEX idx_angsuran_pinjaman (pinjaman_id);
+ALTER TABLE angsuran ADD INDEX idx_angsuran_status (status);
+ALTER TABLE angsuran ADD INDEX idx_angsuran_jatuh_tempo (tanggal_jatuh_tempo);
+ALTER TABLE produk ADD INDEX idx_produk_kategori (kategori_id);
+ALTER TABLE pelanggan ADD INDEX idx_pelanggan_kode (kode_pelanggan);
+ALTER TABLE penjualan ADD INDEX idx_penjualan_pelanggan (pelanggan_id);
+ALTER TABLE penjualan ADD INDEX idx_penjualan_user (user_id);
+ALTER TABLE penjualan ADD INDEX idx_penjualan_tanggal (tanggal_penjualan);
+ALTER TABLE detail_penjualan ADD INDEX idx_detail_penjualan_penjualan (penjualan_id);
+ALTER TABLE detail_penjualan ADD INDEX idx_detail_penjualan_produk (produk_id);
+ALTER TABLE jurnal ADD INDEX idx_jurnal_user (user_id);
+ALTER TABLE detail_jurnal ADD INDEX idx_detail_jurnal_coa (coa_id);
+ALTER TABLE settings ADD INDEX idx_settings_key (setting_key);
