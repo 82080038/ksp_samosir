@@ -1,4 +1,4 @@
-<div class="container-fluid px-3 px-md-4 py-3">
+<div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
             <h2 class="h4 mb-1">Pengaturan Aplikasi</h2>
