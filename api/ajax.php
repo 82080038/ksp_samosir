@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // Include required files
-require_once __DIR__ . '/../../config/config.php';
+require_once __DIR__ . '/../config/config.php';
 
 // Initialize response
 $response = [

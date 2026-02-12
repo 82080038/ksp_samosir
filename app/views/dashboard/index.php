@@ -4,34 +4,6 @@
     .stat-icon { width: 60px; height: 60px; border-radius: 1rem; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
 </style>
 
-<!-- Mobile Navbar -->
-<nav class="navbar navbar-dark bg-dark d-md-none">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="<?= APP_URL ?>/dashboard">KSP Samosir</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mobileNav" aria-controls="mobileNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-    </div>
-    <div class="collapse" id="mobileNav">
-        <div class="bg-dark p-3">
-            <div class="text-white mb-2">
-                <div class="fw-bold">Halo, <?= getCurrentUser()['full_name'] ?? 'Pengguna' ?></div>
-                <small class="text-muted">Role: <?= getCurrentUser()['role'] ?? '-' ?></small>
-            </div>
-            <ul class="nav flex-column">
-                <li class="nav-item"><a class="nav-link text-white" href="<?= APP_URL ?>/dashboard"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
-                <li class="nav-item"><a class="nav-link text-white" href="<?= APP_URL ?>/anggota"><i class="bi bi-people me-2"></i>Anggota</a></li>
-                <li class="nav-item"><a class="nav-link text-white" href="<?= APP_URL ?>/simpanan"><i class="bi bi-piggy-bank me-2"></i>Simpanan</a></li>
-                <li class="nav-item"><a class="nav-link text-white" href="<?= APP_URL ?>/pinjaman"><i class="bi bi-cash-stack me-2"></i>Pinjaman</a></li>
-                <li class="nav-item"><a class="nav-link text-white" href="<?= APP_URL ?>/produk"><i class="bi bi-box me-2"></i>Produk</a></li>
-                <li class="nav-item"><a class="nav-link text-white" href="<?= APP_URL ?>/penjualan"><i class="bi bi-cart3 me-2"></i>Penjualan</a></li>
-                <li class="nav-item"><a class="nav-link text-white" href="<?= APP_URL ?>/laporan"><i class="bi bi-file-earmark me-2"></i>Laporan</a></li>
-                <li class="nav-item"><a class="nav-link text-white" href="<?= APP_URL ?>/settings"><i class="bi bi-gear me-2"></i>Pengaturan</a></li>
-            </ul>
-        </div>
-    </div>
-</nav>
-
 <div class="<?= getResponsiveContainer(true) ?>">
     <div class="<?= getResponsiveSidebar()['container'] ?>">
         <nav class="<?= getResponsiveSidebar()['sidebar'] ?>" id="sidebarMenu">
@@ -46,10 +18,6 @@
                         <li class="nav-item"><a class="nav-link text-white" href="<?= APP_URL ?>/anggota"><i class="bi bi-people me-2"></i>Anggota</a></li>
                         <li class="nav-item"><a class="nav-link text-white" href="<?= APP_URL ?>/simpanan"><i class="bi bi-piggy-bank me-2"></i>Simpanan</a></li>
                         <li class="nav-item"><a class="nav-link text-white" href="<?= APP_URL ?>/pinjaman"><i class="bi bi-cash-stack me-2"></i>Pinjaman</a></li>
-                        <li class="nav-item"><a class="nav-link text-white" href="<?= APP_URL ?>/produk"><i class="bi bi-box me-2"></i>Produk</a></li>
-                        <li class="nav-item"><a class="nav-link text-white" href="<?= APP_URL ?>/penjualan"><i class="bi bi-cart3 me-2"></i>Penjualan</a></li>
-                        <li class="nav-item"><a class="nav-link text-white" href="<?= APP_URL ?>/laporan"><i class="bi bi-file-earmark me-2"></i>Laporan</a></li>
-                        <li class="nav-item"><a class="nav-link text-white" href="<?= APP_URL ?>/settings"><i class="bi bi-gear me-2"></i>Pengaturan</a></li>
                     </ul>
                 </div>
             </div>
@@ -131,7 +99,7 @@
                                         <span class="h2 font-weight-bold mb-0"><?= number_format($stats['total_anggota'] ?? 0) ?></span>
                                     </div>
                                     <div class="col-auto">
-                                        <div class="<?= getResponsiveCard() ?>">
+                                        <div class="stat-icon bg-primary text-white">
                                             <i class="bi bi-people"></i>
                                         </div>
                                     </div>
@@ -149,7 +117,7 @@
                                         <span class="h2 font-weight-bold mb-0">Rp <?= formatCurrency($stats['total_simpanan']) ?></span>
                                     </div>
                                     <div class="col-auto">
-                                        <div class="<?= getResponsiveCard() ?>">
+                                        <div class="stat-icon bg-success text-white">
                                             <i class="bi bi-piggy-bank"></i>
                                         </div>
                                     </div>
@@ -167,7 +135,7 @@
                                         <span class="h2 font-weight-bold mb-0">Rp <?= formatCurrency($stats['total_pinjaman']) ?></span>
                                     </div>
                                     <div class="col-auto">
-                                        <div class="<?= getResponsiveCard() ?>">
+                                        <div class="stat-icon bg-warning text-white">
                                             <i class="bi bi-cash-stack"></i>
                                         </div>
                                     </div>
@@ -185,7 +153,7 @@
                                         <span class="h2 font-weight-bold mb-0">Rp <?= formatCurrency($stats['penjualan_bulan']) ?></span>
                                     </div>
                                     <div class="col-auto">
-                                        <div class="<?= getResponsiveCard() ?>">
+                                        <div class="stat-icon bg-info text-white">
                                             <i class="bi bi-cart3"></i>
                                         </div>
                                     </div>
@@ -301,3 +269,7 @@
         }
     });
 </script>
+
+</main>
+    </div>
+</div>
