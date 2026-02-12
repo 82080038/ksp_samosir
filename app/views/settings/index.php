@@ -10,7 +10,7 @@
     <div class="row g-3">
         <!-- Info Koperasi -->
         <div class="col-12 col-lg-6">
-            <div class="card h-100 shadow-sm">
+            <div class="card h-100 shadow-sm ksp-stats-card">
                 <div class="card-header d-flex align-items-center">
                     <i class="bi bi-building me-2"></i>
                     <strong>Identitas Koperasi</strong>
@@ -84,7 +84,7 @@
 
         <!-- Sumber Alamat -->
         <div class="col-12 col-xl-4">
-            <div class="card h-100 shadow-sm">
+            <div class="card h-100 shadow-sm ksp-stats-card">
                 <div class="card-header d-flex align-items-center">
                     <i class="bi bi-geo-alt me-2"></i>
                     <strong>Sumber Alamat</strong>
@@ -106,7 +106,7 @@
 
         <!-- Compliance & Mode -->
         <div class="col-12 col-xl-4">
-            <div class="card h-100 shadow-sm">
+            <div class="card h-100 shadow-sm ksp-stats-card">
                 <div class="card-header d-flex align-items-center">
                     <i class="bi bi-shield-check me-2"></i>
                     <strong>Compliance / Mode</strong>
