@@ -10,6 +10,8 @@ $role = $user['role'] ?? null;
     <title><?= APP_NAME ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="<?= base_url('public/assets/css/style.css') ?>" rel="stylesheet">
+    <link href="<?= base_url('public/assets/css/style-custom.css') ?>" rel="stylesheet">
 </head>
 <body>
 <!-- Mobile Navbar -->
@@ -61,6 +63,9 @@ $role = $user['role'] ?? null;
         </main>
     </div>
 </div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="<?= base_url('public/assets/js/ksp-ajax.js') ?>"></script>
+<?php include __DIR__ . '/../templates/modals.php'; ?>
 </body>
 </html>
