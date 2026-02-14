@@ -1,4 +1,3 @@
-<!-- AJAX API Handler -->
 <?php
 /**
  * AJAX API Handler for KSP Samosir
@@ -11,7 +10,7 @@ header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, X-Requested-With, X-CSRF-Token');
 
 // Handle preflight requests
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
     exit(0);
 }
 
