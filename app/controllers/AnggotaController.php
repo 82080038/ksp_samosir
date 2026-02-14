@@ -11,20 +11,41 @@ class AnggotaController extends BaseController {
      */
     public function index() {
         // $this->ensureLoginAndRole([.*]); // DISABLED for development
-        
+
+        require_once __DIR__ . '/../shared/php/mobile_optimizer.php';
+
+        $device = getDeviceInfo();
+        $perPage = getMobilePagination();
         $page = intval($_GET['page'] ?? 1);
-        $perPage = ITEMS_PER_PAGE;
         $offset = ($page - 1) * $perPage;
         
         $total = fetchRow("SELECT COUNT(*) as count FROM anggota")['count'];
         $totalPages = ceil($total / $perPage);
         
-        $anggota = fetchAll("SELECT id, no_anggota, nama_lengkap, nik, no_hp, email, status, tanggal_gabung FROM anggota ORDER BY created_at DESC LIMIT ? OFFSET ?", [$perPage, $offset], 'ii');
-        
+        // Build optimized query for device
+        $baseQuery = "
+            FROM anggota a
+            LEFT JOIN addresses addr ON a.address_id = addr.id AND addr.is_primary = 1
+            LEFT JOIN entity_addresses ea ON ea.entity_type = 'member' AND ea.entity_id = a.id AND ea.address_id = addr.id
+            LEFT JOIN contacts c_phone ON a.primary_contact_id = c_phone.id AND c_phone.contact_type = 'phone'
+            LEFT JOIN contacts c_email ON c_email.id = (SELECT id FROM contacts WHERE contact_type = 'email' AND id IN (SELECT contact_id FROM entity_contacts WHERE entity_type = 'member' AND entity_id = a.id) LIMIT 1)
+            ORDER BY a.created_at DESC
+            LIMIT ? OFFSET ?
+        ";
+
+        $selectFields = "a.id, a.no_anggota, a.nama_lengkap, a.nik, a.status, a.tanggal_gabung, COALESCE(addr.street_address, a.alamat) as alamat, COALESCE(c_phone.contact_value, a.no_hp) as no_hp, COALESCE(c_email.contact_value, a.email) as email";
+        $fullQuery = "SELECT {$selectFields} {$baseQuery}";
+        $optimizedQuery = optimizeQueryForDevice($fullQuery, 'anggota');
+        $anggota = fetchAll($optimizedQuery, [$perPage, $offset], 'ii');
+
+        // Compress data for mobile devices
+        $anggota = compressMobileData($anggota);
+
         $this->render(__DIR__ . '/../views/anggota/index.php', [
             'anggota' => $anggota,
             'page' => $page,
-            'totalPages' => $totalPages
+            'totalPages' => $totalPages,
+            'device' => $device
         ]);
     }
 

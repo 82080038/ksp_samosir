@@ -23,11 +23,7 @@ if ($segments[0] === '') {
 }
 
 if ($page === '') {
-    if (isLoggedIn()) {
-        redirect('dashboard');
-    } else {
-        redirect('login');
-    }
+    redirect('dashboard');
 }
 
 $action = $segments[2] ?? 'index';
@@ -87,6 +83,18 @@ switch ($page) {
                 break;
             case 'editUser':
                 $controller->editUser($id);
+                break;
+            case 'processReturn':
+                $controller->processReturn($id);
+                break;
+            case 'approveReturn':
+                $controller->approveReturn($id);
+                break;
+            case 'refunds':
+                $controller->refunds();
+                break;
+            case 'processRefund':
+                $controller->processRefund($id);
                 break;
             case 'updateUser':
                 $controller->updateUser($id);
@@ -224,6 +232,37 @@ switch ($page) {
         $routeMatched = true;
         break;
         
+    case 'rapat':
+        require_once __DIR__ . '/app/controllers/RapatController.php';
+        $controller = new RapatController();
+        switch ($action) {
+            case 'index':
+                $controller->index();
+                break;
+            case 'create':
+                $controller->create();
+                break;
+            case 'store':
+                $controller->store();
+                break;
+            case 'edit':
+                $controller->edit($id);
+                break;
+            case 'update':
+                $controller->update($id);
+                break;
+            case 'delete':
+                $controller->delete($id);
+                break;
+            case 'detail':
+                $controller->detail($id);
+                break;
+            default:
+                $controller->index();
+        }
+        $routeMatched = true;
+        break;
+        
     case 'produk':
         require_once __DIR__ . '/app/controllers/ProdukController.php';
         $controller = new ProdukController();
@@ -276,6 +315,27 @@ switch ($page) {
                 break;
             case 'detail':
                 $controller->detail($id);
+                break;
+            case 'agentSales':
+                $controller->agentSales();
+                break;
+            case 'createAgentSale':
+                $controller->createAgentSale();
+                break;
+            case 'storeAgentSale':
+                $controller->storeAgentSale();
+                break;
+            case 'commissions':
+                $controller->commissions();
+                break;
+            case 'promos':
+                $controller->promos();
+                break;
+            case 'createPromo':
+                $controller->createPromo();
+                break;
+            case 'storePromo':
+                $controller->storePromo();
                 break;
             default:
                 $controller->index();
@@ -353,6 +413,281 @@ switch ($page) {
             default:
                 http_response_code(404);
                 echo json_encode(['error' => 'API endpoint not found']);
+        }
+        $routeMatched = true;
+        break;
+        
+    case 'pengawas':
+        require_once __DIR__ . '/app/controllers/PengawasController.php';
+        $controller = new PengawasController();
+        switch ($action) {
+            case 'index':
+                $controller->index();
+                break;
+            case 'logs':
+                $controller->logs();
+                break;
+            case 'violations':
+                $controller->violations();
+                break;
+            case 'sanctions':
+                $controller->sanctions();
+                break;
+            case 'reports':
+                $controller->reports();
+                break;
+            default:
+                $controller->index();
+        }
+        $routeMatched = true;
+        break;
+        
+    case 'shu':
+        require_once __DIR__ . '/app/controllers/ShuController.php';
+        $controller = new ShuController();
+        switch ($action) {
+            case 'index':
+                $controller->index();
+                break;
+            case 'calculate':
+                $controller->calculate();
+                break;
+            case 'createDistribution':
+                $controller->createDistribution();
+                break;
+            case 'distribute':
+                $controller->distribute();
+                break;
+            case 'reports':
+                $controller->reports();
+                break;
+            default:
+                $controller->index();
+        }
+        $routeMatched = true;
+        break;
+        
+    case 'payment':
+        require_once __DIR__ . '/app/controllers/PaymentController.php';
+        $controller = new PaymentController();
+        switch ($action) {
+            case 'createPayment':
+                $controller->createPayment($id);
+                break;
+            case 'notification':
+                $controller->handleNotification();
+                break;
+            case 'success':
+                $controller->success();
+                break;
+            case 'pending':
+                $controller->pending();
+                break;
+            case 'error':
+                $controller->error();
+                break;
+            case 'checkStatus':
+                $controller->checkStatus($id);
+                break;
+            default:
+                redirect('penjualan');
+        }
+        $routeMatched = true;
+        break;
+        
+    case 'shipping':
+        require_once __DIR__ . '/app/controllers/ShippingController.php';
+        $controller = new ShippingController();
+        switch ($action) {
+            case 'calculateCost':
+                $controller->calculateCost();
+                break;
+            case 'getProvinces':
+                $controller->getProvinces();
+                break;
+            case 'getCities':
+                $controller->getCities($id);
+                break;
+            case 'getShippingOptions':
+                $controller->getShippingOptions();
+                break;
+            case 'saveShipping':
+                $controller->saveShipping($id);
+                break;
+            default:
+                http_response_code(404);
+                echo json_encode(['error' => 'Shipping endpoint not found']);
+        }
+        $routeMatched = true;
+        break;
+        
+    case 'backup':
+        require_once __DIR__ . '/app/controllers/BackupController.php';
+        $controller = new BackupController();
+        switch ($action) {
+            case 'index':
+                $controller->index();
+                break;
+            case 'createBackup':
+                $controller->createBackup();
+                break;
+            case 'downloadBackup':
+                $controller->downloadBackup($id);
+                break;
+            case 'deleteBackup':
+                $controller->deleteBackup($id);
+                break;
+            case 'restoreBackup':
+                $controller->restoreBackup($id);
+                break;
+            case 'scheduleBackup':
+                $controller->scheduleBackup();
+                break;
+            default:
+                $controller->index();
+        }
+        $routeMatched = true;
+        break;
+        
+    case 'invoice':
+        require_once __DIR__ . '/app/controllers/InvoiceController.php';
+        $controller = new InvoiceController();
+        switch ($action) {
+            case 'index':
+                $controller->index();
+                break;
+            case 'customerInvoices':
+                $controller->customerInvoices();
+                break;
+            case 'generateCustomerInvoice':
+                $controller->generateCustomerInvoice($id);
+                break;
+            case 'supplierInvoices':
+                $controller->supplierInvoices();
+                break;
+            case 'recordSupplierInvoice':
+                $controller->recordSupplierInvoice();
+                break;
+            case 'markAsPaid':
+                $controller->markAsPaid($id, isset($_GET['type']) ? $_GET['type'] : 'customer');
+                break;
+            case 'downloadInvoice':
+                $controller->downloadInvoice($id, isset($_GET['type']) ? $_GET['type'] : 'customer');
+                break;
+            default:
+                $controller->index();
+        }
+        $routeMatched = true;
+        break;
+        
+    case 'risk':
+        require_once __DIR__ . '/app/controllers/RiskController.php';
+        $controller = new RiskController();
+        switch ($action) {
+            case 'index':
+                $controller->index();
+                break;
+            case 'monitorTransactions':
+                $controller->monitorTransactions();
+                break;
+            case 'compliance':
+                $controller->compliance();
+                break;
+            case 'generateComplianceReport':
+                $controller->generateComplianceReport();
+                break;
+            case 'fraudDetection':
+                $controller->fraudDetection();
+                break;
+            case 'memberRiskAssessment':
+                $controller->memberRiskAssessment();
+                break;
+            default:
+                $controller->index();
+        }
+        $routeMatched = true;
+        break;
+        
+    case 'asset':
+        require_once __DIR__ . '/app/controllers/AssetController.php';
+        $controller = new AssetController();
+        switch ($action) {
+            case 'index':
+                $controller->index();
+                break;
+            case 'assets':
+                $controller->assets();
+                break;
+            case 'addAsset':
+                $controller->addAsset();
+                break;
+            case 'assetDetail':
+                $controller->assetDetail($id);
+                break;
+            case 'recordMaintenance':
+                $controller->recordMaintenance($id);
+                break;
+            case 'depreciationReport':
+                $controller->depreciationReport();
+                break;
+            default:
+                $controller->index();
+        }
+        $routeMatched = true;
+        break;
+        
+    case 'blockchain':
+        require_once __DIR__ . '/app/controllers/BlockchainController.php';
+        $controller = new BlockchainController();
+        switch ($action) {
+            case 'index':
+                $controller->index();
+                break;
+            case 'recordGovernanceDecision':
+                $controller->recordGovernanceDecision();
+                break;
+            case 'verifyIntegrity':
+                $controller->verifyIntegrity();
+                break;
+            case 'transactionHistory':
+                $controller->transactionHistory();
+                break;
+            case 'transparencyReport':
+                $controller->transparencyReport();
+                break;
+            case 'blockDetail':
+                $controller->blockDetail($id);
+                break;
+            default:
+                $controller->index();
+        }
+        $routeMatched = true;
+        break;
+        
+    case 'monitoring':
+        require_once __DIR__ . '/app/controllers/MonitoringController.php';
+        $controller = new MonitoringController();
+        switch ($action) {
+            case 'index':
+                $controller->index();
+                break;
+            case 'runHealthChecks':
+                $controller->runHealthChecks();
+                break;
+            case 'performanceReport':
+                $controller->performanceReport();
+                break;
+            case 'logs':
+                $controller->logs();
+                break;
+            case 'alerts':
+                $controller->alerts();
+                break;
+            case 'acknowledgeAlert':
+                $controller->acknowledgeAlert($id);
+                break;
+            default:
+                $controller->index();
         }
         $routeMatched = true;
         break;

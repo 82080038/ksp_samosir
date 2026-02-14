@@ -1,6 +1,5 @@
-<div class="container-fluid">
-    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-        <h1 class="h2">Dashboard</h1>
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2" style="color: black;">Dashboard</h1>
         <div class="btn-toolbar mb-2 mb-md-0">
             <div class="btn-group me-2">
                 <button type="button" class="btn btn-sm btn-outline-secondary">
@@ -13,35 +12,11 @@
         </div>
     </div>
 
-<?php if (hasPermission('admin_access')): ?>
-<!-- Super Admin Content -->
+<?php if (true): ?>
+<!-- Welcome Message -->
 <div class="alert alert-info">
     <i class="bi bi-gear me-2"></i>
-    <strong>Selamat datang, <?= getCurrentUser()['full_name'] ?>!</strong> Anda login sebagai <strong><?= ucfirst(getCurrentUser()['role']) ?></strong> dengan akses manajemen.
-</div>
-<?php elseif (hasPermission('manage_users')): ?>
-<!-- Admin Content -->
-<div class="alert alert-info">
-    <i class="bi bi-gear me-2"></i>
-    <strong>Selamat datang, <?= getCurrentUser()['full_name'] ?>!</strong> Anda login sebagai <strong>Administrator</strong> dengan akses manajemen.
-</div>
-<?php elseif (hasPermission('approve_pinjaman')): ?>
-<!-- Supervisor Content -->
-<div class="alert alert-warning">
-    <i class="bi bi-eye me-2"></i>
-    <strong>Selamat datang, <?= getCurrentUser()['full_name'] ?>!</strong> Anda login sebagai <strong>Supervisor</strong> dengan akses approval.
-</div>
-<?php elseif (hasPermission('transaksi_simpanan')): ?>
-<!-- Staff Content -->
-<div class="alert alert-primary">
-    <i class="bi bi-person-workspace me-2"></i>
-    <strong>Selamat datang, <?= getCurrentUser()['full_name'] ?>!</strong> Anda login sebagai <strong>Staff</strong> dengan akses operasional.
-</div>
-<?php else: ?>
-<!-- Member Content -->
-<div class="alert alert-secondary">
-    <i class="bi bi-person me-2"></i>
-    <strong>Selamat datang, <?= getCurrentUser()['full_name'] ?>!</strong> Anda login sebagai <strong>Member</strong>.
+    <strong>Selamat datang!</strong> Anda sedang dalam mode development. Semua fitur dapat diakses tanpa autentikasi.
 </div>
 <?php endif; ?>
                 
@@ -202,7 +177,14 @@
                         </div>
                     </div>
                 </div>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+if (typeof Chart === 'undefined') {
+  const fallback = document.createElement('script');
+  fallback.src = 'https://unpkg.com/chart.js@4.4.1/dist/chart.umd.js';
+  document.head.appendChild(fallback);
+}
+</script>
 <script>
     // Monthly Chart
     const ctx = document.getElementById('monthlyChart').getContext('2d');
@@ -243,6 +225,3 @@
         }
     });
 </script>
-
-</main>
-</div>

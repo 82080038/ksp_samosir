@@ -189,18 +189,13 @@ function decryptData($encryptedData) {
 }
 
 function getCache($key) {
-    $cacheFile = APP_PATH . '/cache/' . md5($key) . '.cache';
-    if (file_exists($cacheFile) && (time() - filemtime($cacheFile) < 3600)) { // 1 hour
-        return unserialize(file_get_contents($cacheFile));
-    }
+    // Cache dimatikan untuk pengembangan
     return null;
 }
 
 function setCache($key, $data) {
-    $cacheDir = APP_PATH . '/cache';
-    if (!is_dir($cacheDir)) mkdir($cacheDir, 0755, true);
-    $cacheFile = $cacheDir . '/' . md5($key) . '.cache';
-    file_put_contents($cacheFile, serialize($data));
+    // Cache dimatikan untuk pengembangan
+    return true;
 }
 
 function sendEmail($to, $subject, $body) {
