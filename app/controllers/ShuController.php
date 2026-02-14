@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/BaseController.php';
+require_once __DIR__ . '/../config/config.php';
 
 /**
  * ShuController handles SHU (Sisa Hasil Usaha) calculation and distribution.

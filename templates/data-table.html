@@ -1,0 +1,83 @@
+<!-- Data Table Template -->
+<script type="text/template" id="data-table-template">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">{{title}}</h5>
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-sm btn-outline-primary" id="{{tableId}}-refresh">
+                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                </button>
+                <button type="button" class="btn btn-sm btn-primary" id="{{tableId}}-add">
+                    <i class="bi bi-plus-circle"></i> Tambah
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <!-- Search and Filter -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" id="{{tableId}}-search"
+                               placeholder="Cari {{title}}...">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="row">
+                        <div class="col-6">
+                            <select class="form-select" id="{{tableId}}-status-filter">
+                                <option value="">Semua Status</option>
+                                <option value="aktif">Aktif</option>
+                                <option value="nonaktif">Nonaktif</option>
+                                <option value="pending">Pending</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <select class="form-select" id="{{tableId}}-per-page">
+                                <option value="15">15 per halaman</option>
+                                <option value="25">25 per halaman</option>
+                                <option value="50">50 per halaman</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div id="{{tableId}}-loading" class="text-center py-4" style="display: none;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <div class="mt-2">Memuat data...</div>
+            </div>
+
+            <!-- Table -->
+            <div class="table-responsive">
+                <table class="table table-hover table-striped" id="{{tableId}}-table">
+                    <thead class="table-dark">
+                        <tr>
+                            {{tableHeaders}}
+                        </tr>
+                    </thead>
+                    <tbody id="{{tableId}}-tbody">
+                        <!-- Data rows will be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Empty State -->
+            <div id="{{tableId}}-empty" class="text-center py-5" style="display: none;">
+                <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                <h5 class="text-muted mt-3">Tidak ada data</h5>
+                <p class="text-muted">Belum ada {{title}} yang tercatat dalam sistem.</p>
+            </div>
+
+            <!-- Pagination -->
+            <nav id="{{tableId}}-pagination" aria-label="Table pagination" style="display: none;">
+                <ul class="pagination justify-content-center" id="{{tableId}}-pagination-list">
+                    <!-- Pagination links will be inserted here -->
+                </ul>
+            </nav>
+        </div>
+    </div>
+</script>

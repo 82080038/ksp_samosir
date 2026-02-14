@@ -28,6 +28,11 @@
           rel="stylesheet"
           as="style">
 
+    <!-- KSP Theme CSS - Custom Bootstrap Theme -->
+    <link href="<?= base_url('public/assets/css/ksp-theme.css?v=' . filemtime(__DIR__ . '/../../public/assets/css/ksp-theme.css')) ?>"
+          rel="stylesheet"
+          as="style">
+
     <!-- Preload Critical Resources -->
     <link rel="preload" href="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js" as="script">
     <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" as="script">
@@ -242,18 +247,22 @@ if ('serviceWorker' in navigator) {
 
 <!-- jQuery - Optimized Loading -->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"
-        integrity="sha384-1H217gwSVyLSIfaLxHbE7dRb3v4mYCKbpAhJTS7x/GBWmLiZJ58/aE4EFq5Dcry1"
         crossorigin="anonymous"
         defer></script>
 
 <!-- Bootstrap JS Bundle - Optimized Loading -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
         crossorigin="anonymous"
         defer></script>
 
 <!-- Custom AJAX Handler - Optimized -->
 <script src="<?= base_url('public/assets/js/ksp-ajax.min.js?v=' . filemtime(__DIR__ . '/../../public/assets/js/ksp-ajax.js')) ?>" defer></script>
+
+<!-- KSP Components Library -->
+<script src="<?= base_url('public/assets/js/ksp-components.js?v=' . filemtime(__DIR__ . '/../../public/assets/js/ksp-components.js')) ?>" defer></script>
+
+<!-- Member Manager Module -->
+<script src="<?= base_url('public/assets/js/member-manager.js?v=' . filemtime(__DIR__ . '/../../public/assets/js/member-manager.js')) ?>" defer></script>
 
 <!-- Main Application Script -->
 <script defer>

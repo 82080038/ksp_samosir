@@ -88,6 +88,76 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             <?php endif; ?>
+
+            <!-- Development Test Accounts -->
+            <div class="alert alert-warning" role="alert">
+                <i class="bi bi-info-circle me-2"></i>
+                <strong>Mode Development:</strong> Gunakan akun test di bawah ini
+            </div>
+
+            <div class="accordion mb-3" id="testAccountsAccordion">
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#testAccounts" aria-expanded="false" aria-controls="testAccounts">
+                            <i class="bi bi-key me-2"></i>Klik untuk lihat Test Accounts
+                        </button>
+                    </h2>
+                    <div id="testAccounts" class="accordion-collapse collapse" data-bs-parent="#testAccountsAccordion">
+                        <div class="accordion-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-borderless mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="py-2">Role</th>
+                                            <th class="py-2">Username</th>
+                                            <th class="py-2">Password</th>
+                                            <th class="py-2">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td class="py-2">
+                                                <span class="badge bg-danger">Admin</span>
+                                            </td>
+                                            <td class="py-2"><code>admin</code></td>
+                                            <td class="py-2"><code>admin123</code></td>
+                                            <td class="py-2">
+                                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="fillLogin('admin', 'admin123')">
+                                                    <i class="bi bi-arrow-right-circle"></i> Use
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="py-2">
+                                                <span class="badge bg-warning">Staff</span>
+                                            </td>
+                                            <td class="py-2"><code>staff</code></td>
+                                            <td class="py-2"><code>staff123</code></td>
+                                            <td class="py-2">
+                                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="fillLogin('staff', 'staff123')">
+                                                    <i class="bi bi-arrow-right-circle"></i> Use
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="py-2">
+                                                <span class="badge bg-success">Member</span>
+                                            </td>
+                                            <td class="py-2"><code>member</code></td>
+                                            <td class="py-2"><code>member123</code></td>
+                                            <td class="py-2">
+                                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="fillLogin('member', 'member123')">
+                                                    <i class="bi bi-arrow-right-circle"></i> Use
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             
             <form method="POST" action="http://localhost/ksp_samosir/login/authenticate">
                 <div class="form-floating mb-3">
@@ -108,16 +178,57 @@
                 </div>
                 
                 <div class="d-grid mt-4">
-                    <button type="submit" class="btn btn-primary">Login</button>
+                    <button type="submit" class="btn btn-primary btn-login">Login</button>
                 </div>
             </form>
             
-            <div class="text-center">
+            <div class="text-center mt-3">
                 <small class="text-muted">
-                    Default: admin / admin123
+                    <i class="bi bi-shield-check me-1"></i>
+                    Development Environment - Test Credentials Only
                 </small>
             </div>
         </div>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Auto-fill login form function
+        function fillLogin(username, password) {
+            document.getElementById('username').value = username;
+            document.getElementById('password').value = password;
+            
+            // Add visual feedback
+            const button = event.target.closest('button');
+            const originalHtml = button.innerHTML;
+            button.innerHTML = '<i class="bi bi-check-circle"></i> Filled';
+            button.classList.remove('btn-outline-primary');
+            button.classList.add('btn-success');
+            
+            // Reset after 2 seconds
+            setTimeout(() => {
+                button.innerHTML = originalHtml;
+                button.classList.remove('btn-success');
+                button.classList.add('btn-outline-primary');
+            }, 2000);
+            
+            // Focus on submit button
+            document.querySelector('button[type="submit"]').focus();
+        }
+        
+        // Auto-expand test accounts on page load if no error
+        document.addEventListener('DOMContentLoaded', function() {
+            const errorAlert = document.querySelector('.alert-danger');
+            if (!errorAlert) {
+                // No error, show test accounts for convenience
+                const accordionButton = document.querySelector('#testAccountsAccordion .accordion-button');
+                if (accordionButton) {
+                    setTimeout(() => {
+                        accordionButton.click();
+                    }, 1000);
+                }
+            }
+        });
+    </script>
 </body>
 </html>

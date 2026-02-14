@@ -1,0 +1,946 @@
+openapi: 3.0.3
+info:
+  title: KSP Samosir API
+  description: RESTful API for KSP Samosir Cooperative Management System
+  version: 1.0.0
+  contact:
+    name: KSP Samosir Development Team
+    email: support@ksp-samosir.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost/ksp_samosir
+    description: Development server
+  - url: https://api.ksp-samosir.com
+    description: Production server
+
+security:
+  - sessionAuth: []
+  - apiKeyAuth: []
+
+paths:
+  /api/v1/members:
+    get:
+      summary: Get list of members
+      description: Retrieve paginated list of cooperative members with optional filtering
+      operationId: getMembers
+      tags:
+        - Members
+      parameters:
+        - name: page
+          in: query
+          description: Page number for pagination
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: per_page
+          in: query
+          description: Number of items per page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 15
+        - name: search
+          in: query
+          description: Search term for member name or member number
+          required: false
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: Filter by member status
+          required: false
+          schema:
+            type: string
+            enum: [aktif, nonaktif, keluar]
+            default: aktif
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Member'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    post:
+      summary: Create new member
+      description: Register a new cooperative member
+      operationId: createMember
+      tags:
+        - Members
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - nama_lengkap
+                - no_ktp
+                - alamat
+              properties:
+                nama_lengkap:
+                  type: string
+                  example: "Ahmad Samosir"
+                no_ktp:
+                  type: string
+                  example: "1271061234567890"
+                tanggal_lahir:
+                  type: string
+                  format: date
+                  example: "1990-01-15"
+                alamat:
+                  type: string
+                  example: "Jl. Sudirman No. 123, Medan"
+                no_telepon:
+                  type: string
+                  example: "08123456789"
+                email:
+                  type: string
+                  format: email
+                  example: "ahmad@example.com"
+      responses:
+        '201':
+          description: Member created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 123
+                      no_anggota:
+                        type: string
+                        example: "KSP-2026-0123"
+                  message:
+                    type: string
+                    example: "Member created successfully"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/v1/members/{id}:
+    get:
+      summary: Get member details
+      description: Retrieve detailed information about a specific member
+      operationId: getMember
+      tags:
+        - Members
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Member ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/MemberDetail'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    put:
+      summary: Update member
+      description: Update member information
+      operationId: updateMember
+      tags:
+        - Members
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Member ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nama_lengkap:
+                  type: string
+                  example: "Ahmad Samosir Updated"
+                no_ktp:
+                  type: string
+                  example: "1271061234567890"
+                alamat:
+                  type: string
+                  example: "Jl. Sudirman No. 456, Medan"
+                no_telepon:
+                  type: string
+                  example: "08123456789"
+                email:
+                  type: string
+                  format: email
+                  example: "ahmad.updated@example.com"
+                status:
+                  type: string
+                  enum: [aktif, nonaktif, keluar]
+                  example: "aktif"
+      responses:
+        '200':
+          description: Member updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Member updated successfully"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    delete:
+      summary: Deactivate member
+      description: Deactivate a member (soft delete by setting status to nonaktif)
+      operationId: deleteMember
+      tags:
+        - Members
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Member ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Member deactivated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Member deactivated successfully"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/v1/loans:
+    get:
+      summary: Get list of loans
+      description: Retrieve paginated list of loan applications
+      operationId: getLoans
+      tags:
+        - Loans
+      parameters:
+        - name: page
+          in: query
+          description: Page number for pagination
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: per_page
+          in: query
+          description: Number of items per page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 15
+        - name: status
+          in: query
+          description: Filter by loan status
+          required: false
+          schema:
+            type: string
+            enum: [pending, approved, rejected, disbursed, completed]
+        - name: member_id
+          in: query
+          description: Filter by member ID
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Loan'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    post:
+      summary: Create loan application
+      description: Submit a new loan application
+      operationId: createLoan
+      tags:
+        - Loans
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - anggota_id
+                - jenis_pinjaman_id
+                - jumlah_pinjaman
+                - jangka_waktu
+              properties:
+                anggota_id:
+                  type: integer
+                  example: 123
+                jenis_pinjaman_id:
+                  type: integer
+                  example: 1
+                jumlah_pinjaman:
+                  type: number
+                  format: float
+                  example: 10000000.00
+                jangka_waktu:
+                  type: integer
+                  example: 12
+                bunga_per_tahun:
+                  type: number
+                  format: float
+                  example: 12.0
+      responses:
+        '201':
+          description: Loan application created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 456
+                  message:
+                    type: string
+                    example: "Loan application created successfully"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/v1/loans/{id}/approve:
+    put:
+      summary: Approve loan
+      description: Approve a pending loan application
+      operationId: approveLoan
+      tags:
+        - Loans
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Loan ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Loan approved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Loan approved successfully"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/v1/loans/{id}/reject:
+    put:
+      summary: Reject loan
+      description: Reject a pending loan application
+      operationId: rejectLoan
+      tags:
+        - Loans
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Loan ID
+          schema:
+            type: integer
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  example: "Insufficient collateral"
+      responses:
+        '200':
+          description: Loan rejected successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Loan rejected successfully"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/v1/savings:
+    get:
+      summary: Get list of savings
+      description: Retrieve paginated list of savings records
+      operationId: getSavings
+      tags:
+        - Savings
+      parameters:
+        - name: page
+          in: query
+          description: Page number for pagination
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: per_page
+          in: query
+          description: Number of items per page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 15
+        - name: member_id
+          in: query
+          description: Filter by member ID
+          required: false
+          schema:
+            type: integer
+        - name: type
+          in: query
+          description: Filter by savings type
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Saving'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    post:
+      summary: Create savings transaction
+      description: Record a new savings deposit or withdrawal
+      operationId: createSaving
+      tags:
+        - Savings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - anggota_id
+                - jenis_simpanan_id
+                - jumlah
+              properties:
+                anggota_id:
+                  type: integer
+                  example: 123
+                jenis_simpanan_id:
+                  type: integer
+                  example: 1
+                jumlah:
+                  type: number
+                  format: float
+                  example: 500000.00
+                keterangan:
+                  type: string
+                  example: "Setoran rutin bulan Februari"
+      responses:
+        '201':
+          description: Savings transaction created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 789
+                  message:
+                    type: string
+                    example: "Saving record created successfully"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/v1/addresses:
+    get:
+      summary: Get provinces
+      description: Retrieve list of all provinces
+      operationId: getProvinces
+      tags:
+        - Addresses
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 12
+                        name:
+                          type: string
+                          example: "Sumatera Utara"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    post:
+      summary: Search addresses
+      description: Search for provinces, regencies, districts, or villages
+      operationId: searchAddresses
+      tags:
+        - Addresses
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - keyword
+                - type
+              properties:
+                keyword:
+                  type: string
+                  example: "medan"
+                type:
+                  type: string
+                  enum: [province, regency, district, village]
+                  example: "regency"
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1271
+                        name:
+                          type: string
+                          example: "Kota Medan"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+components:
+  schemas:
+    Member:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 123
+        no_anggota:
+          type: string
+          example: "KSP-2026-0123"
+        nama_lengkap:
+          type: string
+          example: "Ahmad Samosir"
+        no_ktp:
+          type: string
+          example: "1271061234567890"
+        tanggal_lahir:
+          type: string
+          format: date
+          example: "1990-01-15"
+        alamat:
+          type: string
+          example: "Jl. Sudirman No. 123, Medan"
+        no_telepon:
+          type: string
+          example: "08123456789"
+        email:
+          type: string
+          format: email
+          example: "ahmad@example.com"
+        status:
+          type: string
+          enum: [aktif, nonaktif, keluar]
+          example: "aktif"
+        tanggal_daftar:
+          type: string
+          format: date
+          example: "2026-02-14"
+
+    MemberDetail:
+      allOf:
+        - $ref: '#/components/schemas/Member'
+        - type: object
+          properties:
+            address_id:
+              type: integer
+              example: 456
+            full_address:
+              type: string
+              example: "Jl. Sudirman No. 123, Medan, Sumatera Utara 20212"
+
+    Loan:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 456
+        anggota_id:
+          type: integer
+          example: 123
+        jenis_pinjaman_id:
+          type: integer
+          example: 1
+        jumlah_pinjaman:
+          type: number
+          format: float
+          example: 10000000.00
+        jangka_waktu:
+          type: integer
+          example: 12
+        bunga_per_tahun:
+          type: number
+          format: float
+          example: 12.0
+        tanggal_pengajuan:
+          type: string
+          format: date
+          example: "2026-02-14"
+        tanggal_disetujui:
+          type: string
+          format: date
+          nullable: true
+          example: "2026-02-15"
+        tanggal_pencairan:
+          type: string
+          format: date
+          nullable: true
+          example: "2026-02-16"
+        tanggal_jatuh_tempo:
+          type: string
+          format: date
+          nullable: true
+          example: "2027-02-16"
+        status:
+          type: string
+          enum: [pending, approved, rejected, disbursed, completed]
+          example: "approved"
+        member_name:
+          type: string
+          example: "Ahmad Samosir"
+        no_anggota:
+          type: string
+          example: "KSP-2026-0123"
+
+    Saving:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 789
+        anggota_id:
+          type: integer
+          example: 123
+        jenis_simpanan_id:
+          type: integer
+          example: 1
+        jumlah:
+          type: number
+          format: float
+          example: 500000.00
+        tanggal_transaksi:
+          type: string
+          format: datetime
+          example: "2026-02-14T10:30:00Z"
+        keterangan:
+          type: string
+          nullable: true
+          example: "Setoran rutin bulan Februari"
+        nama_lengkap:
+          type: string
+          example: "Ahmad Samosir"
+        no_anggota:
+          type: string
+          example: "KSP-2026-0123"
+        nama_jenis:
+          type: string
+          example: "Simpanan Pokok"
+
+    PaginationMeta:
+      type: object
+      properties:
+        pagination:
+          type: object
+          properties:
+            total:
+              type: integer
+              example: 150
+            per_page:
+              type: integer
+              example: 15
+            current_page:
+              type: integer
+              example: 1
+            last_page:
+              type: integer
+              example: 10
+            from:
+              type: integer
+              example: 1
+            to:
+              type: integer
+              example: 15
+
+  responses:
+    BadRequest:
+      description: Bad Request - Invalid input data
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Field 'nama_lengkap' is required"
+                  code:
+                    type: integer
+                    example: 400
+
+    Unauthorized:
+      description: Unauthorized - Authentication required
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Unauthorized"
+                  code:
+                    type: integer
+                    example: 401
+
+    NotFound:
+      description: Not Found - Resource does not exist
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Member not found"
+                  code:
+                    type: integer
+                    example: 404
+
+    ServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Internal server error"
+                  code:
+                    type: integer
+                    example: 500
+
+  securitySchemes:
+    sessionAuth:
+      type: http
+      scheme: cookie
+      description: Session-based authentication using PHPSESSID cookie
+
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-KEY
+      description: API key authentication for external integrations

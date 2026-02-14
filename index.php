@@ -406,14 +406,7 @@ switch ($page) {
     case 'api':
         require_once __DIR__ . '/app/controllers/ApiController.php';
         $controller = new ApiController();
-        switch ($action) {
-            case 'anggota':
-                $controller->anggota();
-                break;
-            default:
-                http_response_code(404);
-                echo json_encode(['error' => 'API endpoint not found']);
-        }
+        $controller->handleRequest();
         $routeMatched = true;
         break;
         

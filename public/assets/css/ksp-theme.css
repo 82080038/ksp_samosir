@@ -1,0 +1,468 @@
+/* ========================================
+   KSP Samosir Custom Bootstrap Theme
+   Enhanced styling system with CSS variables
+   ======================================== */
+
+:root {
+  /* KSP Brand Colors */
+  --ksp-primary: #0d6efd;
+  --ksp-primary-light: #3d7bfd;
+  --ksp-primary-dark: #0a58ca;
+  --ksp-secondary: #6c757d;
+  --ksp-success: #198754;
+  --ksp-info: #0dcaf0;
+  --ksp-warning: #ffc107;
+  --ksp-danger: #dc3545;
+  --ksp-light: #f8f9fa;
+  --ksp-dark: #212529;
+
+  /* Extended Color Palette */
+  --ksp-accent: #6610f2;
+  --ksp-teal: #20c997;
+  --ksp-indigo: #6610f2;
+  --ksp-purple: #6f42c1;
+  --ksp-pink: #e83e8c;
+  --ksp-orange: #fd7e14;
+  --ksp-cyan: #0dcaf0;
+
+  /* Neutral Colors */
+  --ksp-white: #ffffff;
+  --ksp-gray-100: #f8f9fa;
+  --ksp-gray-200: #e9ecef;
+  --ksp-gray-300: #dee2e6;
+  --ksp-gray-400: #ced4da;
+  --ksp-gray-500: #adb5bd;
+  --ksp-gray-600: #6c757d;
+  --ksp-gray-700: #495057;
+  --ksp-gray-800: #343a40;
+  --ksp-gray-900: #212529;
+  --ksp-black: #000000;
+
+  /* Typography */
+  --ksp-font-family-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --ksp-font-family-mono: 'Fira Code', 'SF Mono', Monaco, Inconsolata, 'Roboto Mono', monospace;
+  --ksp-font-size-base: 1rem;
+  --ksp-font-size-sm: 0.875rem;
+  --ksp-font-size-lg: 1.125rem;
+  --ksp-font-weight-light: 300;
+  --ksp-font-weight-normal: 400;
+  --ksp-font-weight-medium: 500;
+  --ksp-font-weight-semibold: 600;
+  --ksp-font-weight-bold: 700;
+
+  /* Spacing */
+  --ksp-border-radius: 8px;
+  --ksp-border-radius-sm: 4px;
+  --ksp-border-radius-lg: 12px;
+  --ksp-border-radius-xl: 16px;
+
+  /* Shadows */
+  --ksp-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --ksp-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --ksp-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07), 0 1px 3px rgba(0, 0, 0, 0.1);
+  --ksp-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+  --ksp-shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.04);
+  --ksp-shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.25);
+
+  /* Transitions */
+  --ksp-transition-fast: 0.15s ease-in-out;
+  --ksp-transition-base: 0.2s ease-in-out;
+  --ksp-transition-slow: 0.3s ease-in-out;
+
+  /* Z-index scale */
+  --ksp-z-dropdown: 1000;
+  --ksp-z-sticky: 1020;
+  --ksp-z-fixed: 1030;
+  --ksp-z-modal-backdrop: 1040;
+  --ksp-z-modal: 1050;
+  --ksp-z-popover: 1060;
+  --ksp-z-tooltip: 1070;
+  --ksp-z-toast: 1080;
+}
+
+/* ========================================
+   GLOBAL OVERRIDES
+   ======================================== */
+
+body {
+  font-family: var(--ksp-font-family-sans);
+  font-size: var(--ksp-font-size-base);
+  line-height: 1.6;
+  color: var(--ksp-gray-800);
+  background-color: var(--ksp-gray-50);
+}
+
+/* Enhanced focus styles */
+.btn:focus,
+.form-control:focus,
+.form-select:focus {
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+  border-color: var(--ksp-primary);
+}
+
+/* ========================================
+   CUSTOM COMPONENTS
+   ======================================== */
+
+/* KSP Stats Cards */
+.ksp-stats-card {
+  border: none;
+  border-radius: var(--ksp-border-radius-lg);
+  box-shadow: var(--ksp-shadow);
+  transition: var(--ksp-transition-base);
+  background: linear-gradient(135deg, var(--ksp-white) 0%, var(--ksp-gray-50) 100%);
+}
+
+.ksp-stats-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--ksp-shadow-lg);
+}
+
+.ksp-stats-card .card-body {
+  padding: 1.5rem;
+}
+
+/* Enhanced Buttons */
+.btn-ksp-primary {
+  background-color: var(--ksp-primary);
+  border-color: var(--ksp-primary);
+  border-radius: var(--ksp-border-radius);
+  box-shadow: var(--ksp-shadow-sm);
+  font-weight: var(--ksp-font-weight-medium);
+  transition: var(--ksp-transition-fast);
+}
+
+.btn-ksp-primary:hover {
+  background-color: var(--ksp-primary-dark);
+  border-color: var(--ksp-primary-dark);
+  transform: translateY(-1px);
+  box-shadow: var(--ksp-shadow);
+}
+
+.btn-ksp-primary:active {
+  transform: translateY(0);
+  box-shadow: var(--ksp-shadow-sm);
+}
+
+/* KSP Cards */
+.ksp-card {
+  border: none;
+  border-radius: var(--ksp-border-radius-lg);
+  box-shadow: var(--ksp-shadow);
+  transition: var(--ksp-transition-base);
+}
+
+.ksp-card:hover {
+  box-shadow: var(--ksp-shadow-md);
+}
+
+.ksp-card .card-header {
+  background: linear-gradient(135deg, var(--ksp-primary) 0%, var(--ksp-primary-light) 100%);
+  color: var(--ksp-white);
+  border-radius: var(--ksp-border-radius-lg) var(--ksp-border-radius-lg) 0 0 !important;
+  border-bottom: none;
+  font-weight: var(--ksp-font-weight-semibold);
+}
+
+/* Enhanced Form Controls */
+.form-control,
+.form-select {
+  border: 2px solid var(--ksp-gray-300);
+  border-radius: var(--ksp-border-radius);
+  padding: 0.5rem 0.75rem;
+  font-size: var(--ksp-font-size-base);
+  transition: var(--ksp-transition-fast);
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--ksp-primary);
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+}
+
+.form-control.is-valid {
+  border-color: var(--ksp-success);
+  box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.15);
+}
+
+.form-control.is-invalid {
+  border-color: var(--ksp-danger);
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.15);
+}
+
+/* Enhanced Tables */
+.table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.table thead th {
+  background-color: var(--ksp-gray-100);
+  border-bottom: 2px solid var(--ksp-gray-300);
+  font-weight: var(--ksp-font-weight-semibold);
+  color: var(--ksp-gray-700);
+  padding: 1rem 0.75rem;
+}
+
+.table tbody tr {
+  transition: var(--ksp-transition-fast);
+}
+
+.table tbody tr:hover {
+  background-color: var(--ksp-gray-50);
+}
+
+.table td {
+  padding: 0.75rem;
+  vertical-align: middle;
+  border-top: 1px solid var(--ksp-gray-200);
+}
+
+/* Status Badges */
+.badge-status-aktif {
+  background-color: var(--ksp-success);
+  color: var(--ksp-white);
+}
+
+.badge-status-nonaktif {
+  background-color: var(--ksp-secondary);
+  color: var(--ksp-white);
+}
+
+.badge-status-pending {
+  background-color: var(--ksp-warning);
+  color: var(--ksp-dark);
+}
+
+/* Loading States */
+.loading-overlay {
+  position: relative;
+}
+
+.loading-overlay::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.loading-spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 3px solid var(--ksp-gray-300);
+  border-top: 3px solid var(--ksp-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Animations */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* ========================================
+   SIDEBAR ENHANCEMENTS
+   ======================================== */
+
+.ksp-sidebar {
+  background: linear-gradient(180deg, var(--ksp-dark) 0%, var(--ksp-gray-800) 100%);
+  border-right: 1px solid var(--ksp-gray-700);
+}
+
+.ksp-sidebar .nav-link {
+  color: var(--ksp-gray-300) !important;
+  border-radius: var(--ksp-border-radius);
+  margin: 0.25rem 0.5rem;
+  transition: var(--ksp-transition-fast);
+  font-weight: var(--ksp-font-weight-medium);
+}
+
+.ksp-sidebar .nav-link:hover {
+  color: var(--ksp-white) !important;
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: translateX(4px);
+}
+
+.ksp-sidebar .nav-link.active {
+  color: var(--ksp-white) !important;
+  background: linear-gradient(135deg, var(--ksp-primary) 0%, var(--ksp-primary-light) 100%);
+  box-shadow: var(--ksp-shadow);
+}
+
+/* ========================================
+   DASHBOARD SPECIFIC STYLES
+   ======================================== */
+
+.dashboard-metric {
+  background: linear-gradient(135deg, var(--ksp-white) 0%, var(--ksp-gray-50) 100%);
+  border-radius: var(--ksp-border-radius-lg);
+  padding: 1.5rem;
+  box-shadow: var(--ksp-shadow-sm);
+  border: 1px solid var(--ksp-gray-200);
+  transition: var(--ksp-transition-base);
+}
+
+.dashboard-metric:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--ksp-shadow);
+}
+
+.metric-value {
+  font-size: 2rem;
+  font-weight: var(--ksp-font-weight-bold);
+  color: var(--ksp-primary);
+  margin-bottom: 0.5rem;
+}
+
+.metric-label {
+  color: var(--ksp-gray-600);
+  font-size: 0.875rem;
+  font-weight: var(--ksp-font-weight-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ========================================
+   ALERTS AND NOTIFICATIONS
+   ======================================== */
+
+.alert-ksp {
+  border: none;
+  border-radius: var(--ksp-border-radius);
+  box-shadow: var(--ksp-shadow-sm);
+  border-left: 4px solid;
+}
+
+.alert-success {
+  border-left-color: var(--ksp-success);
+  background: linear-gradient(135deg, rgba(25, 135, 84, 0.1) 0%, rgba(25, 135, 84, 0.05) 100%);
+}
+
+.alert-danger {
+  border-left-color: var(--ksp-danger);
+  background: linear-gradient(135deg, rgba(220, 53, 69, 0.1) 0%, rgba(220, 53, 69, 0.05) 100%);
+}
+
+.alert-warning {
+  border-left-color: var(--ksp-warning);
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 193, 7, 0.05) 100%);
+}
+
+.alert-info {
+  border-left-color: var(--ksp-info);
+  background: linear-gradient(135deg, rgba(13, 202, 240, 0.1) 0%, rgba(13, 202, 240, 0.05) 100%);
+}
+
+/* ========================================
+   RESPONSIVE ENHANCEMENTS
+   ======================================== */
+
+@media (max-width: 768px) {
+  .ksp-stats-card {
+    margin-bottom: 1rem;
+  }
+
+  .ksp-sidebar .nav-link {
+    margin: 0.125rem 0.25rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+  }
+
+  .dashboard-metric {
+    padding: 1rem;
+  }
+
+  .metric-value {
+    font-size: 1.5rem;
+  }
+}
+
+/* ========================================
+   UTILITY CLASSES
+   ======================================== */
+
+.text-gradient {
+  background: linear-gradient(135deg, var(--ksp-primary) 0%, var(--ksp-accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.shadow-ksp {
+  box-shadow: var(--ksp-shadow) !important;
+}
+
+.shadow-ksp-lg {
+  box-shadow: var(--ksp-shadow-lg) !important;
+}
+
+.border-radius-ksp {
+  border-radius: var(--ksp-border-radius) !important;
+}
+
+.transition-ksp {
+  transition: var(--ksp-transition-base) !important;
+}
+
+/* ========================================
+   DARK MODE SUPPORT (Future Enhancement)
+   ======================================== */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ksp-gray-50: #1a1a1a;
+    --ksp-gray-100: #2d2d2d;
+    --ksp-gray-200: #404040;
+    --ksp-white: #1a1a1a;
+  }
+
+  body {
+    background-color: var(--ksp-gray-900);
+    color: var(--ksp-gray-100);
+  }
+
+  .ksp-card {
+    background-color: var(--ksp-gray-800);
+    color: var(--ksp-gray-100);
+  }
+}
+
+/* ========================================
+   PRINT STYLES
+   ======================================== */
+
+@media print {
+  .ksp-sidebar,
+  .btn,
+  .alert,
+  .card-header .btn-group {
+    display: none !important;
+  }
+
+  .ksp-card {
+    box-shadow: none;
+    border: 1px solid var(--ksp-gray-300);
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+  }
+}

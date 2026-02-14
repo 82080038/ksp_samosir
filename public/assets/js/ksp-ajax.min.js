@@ -82,79 +82,123 @@ window.KSP = {
         return `${settings.method}_${settings.url}_${JSON.stringify(settings.data)}`;
     },
 
-    // Enhanced AJAX method with caching
-    ajax: function (action, data, successCallback, errorCallback, options = {}) {
-        const cacheKey = options.cache ? `${action}_${JSON.stringify(data)}` : null;
-        const useCache = options.cache !== false && cacheKey;
+    // Enhanced AJAX method with RESTful API support
+    ajax: function (url, options = {}) {
+        const self = this;
+        const defaults = {
+            method: 'GET',
+            dataType: 'json',
+            cache: true,
+            timeout: 30000,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json'
+            }
+        };
 
-        // Return cached response if available and not expired
-        if (useCache && this.cache.has(cacheKey)) {
+        // Set CSRF token if available
+        if (window.KSP.csrfToken) {
+            defaults.headers['X-CSRF-Token'] = window.KSP.csrfToken;
+        }
+
+        const settings = { ...defaults, ...options };
+
+        // Convert data to JSON for non-GET requests
+        if (settings.method !== 'GET' && settings.data && typeof settings.data === 'object') {
+            settings.data = JSON.stringify(settings.data);
+        }
+
+        // Handle caching for GET requests
+        const cacheKey = settings.cache && settings.method === 'GET' ? url : null;
+        if (cacheKey && this.cache.has(cacheKey)) {
             const cached = this.cache.get(cacheKey);
-            if (Date.now() - cached.timestamp < (options.cacheTime || 300000)) { // 5 minutes default
-                if (typeof successCallback === 'function') {
-                    successCallback(cached.data);
-                }
-                return;
+            if (Date.now() - cached.timestamp < (settings.cacheTime || 300000)) {
+                return Promise.resolve(cached.data);
             } else {
                 this.cache.delete(cacheKey);
             }
         }
 
-        const requestData = {
-            action: action,
-            data: data || {},
-            timestamp: Date.now() // Prevent caching issues
-        };
+        return new Promise((resolve, reject) => {
+            // Prevent duplicate requests
+            const requestKey = `${settings.method}_${url}`;
+            if (this.pendingRequests.has(requestKey)) {
+                reject(new Error('Request already in progress'));
+                return;
+            }
+            this.pendingRequests.set(requestKey, true);
 
-        const ajaxOptions = {
-            data: requestData,
-            success: (response) => {
-                // Cache successful responses
-                if (useCache && response.success) {
-                    this.cache.set(cacheKey, {
-                        data: response.data,
-                        timestamp: Date.now()
-                    });
-                }
+            const xhr = new XMLHttpRequest();
+            xhr.open(settings.method, url, true);
 
-                if (response.success) {
-                    if (typeof successCallback === 'function') {
-                        successCallback(response.data);
+            // Set headers
+            Object.keys(settings.headers).forEach(header => {
+                xhr.setRequestHeader(header, settings.headers[header]);
+            });
+
+            xhr.timeout = settings.timeout;
+            xhr.responseType = settings.dataType === 'json' ? 'json' : 'text';
+
+            xhr.onload = () => {
+                this.pendingRequests.delete(requestKey);
+
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    let response = xhr.response;
+
+                    // Parse JSON if needed
+                    if (settings.dataType === 'json' && typeof response === 'string') {
+                        try {
+                            response = JSON.parse(response);
+                        } catch (e) {
+                            reject(new Error('Invalid JSON response'));
+                            return;
+                        }
                     }
+
+                    // Cache successful GET responses
+                    if (cacheKey && response.success !== false) {
+                        this.cache.set(cacheKey, {
+                            data: response,
+                            timestamp: Date.now()
+                        });
+                    }
+
+                    resolve(response);
                 } else {
-                    if (typeof errorCallback === 'function') {
-                        errorCallback(response.error);
-                    } else {
-                        this.showError(response.error?.message || 'Terjadi kesalahan');
-                    }
+                    reject(new Error(`HTTP ${xhr.status}: ${xhr.statusText}`));
                 }
-            },
-            error: errorCallback || ((xhr, status, error) => {
-                // Error already handled in ajaxSetup
-            })
-        };
+            };
 
-        // Apply additional options
-        if (options.debounce) {
-            return this.debouncedAjax(action, ajaxOptions, options.debounce);
-        }
+            xhr.onerror = () => {
+                this.pendingRequests.delete(requestKey);
+                reject(new Error('Network error'));
+            };
 
-        return $.ajax(ajaxOptions);
+            xhr.ontimeout = () => {
+                this.pendingRequests.delete(requestKey);
+                reject(new Error('Request timeout'));
+            };
+
+            xhr.send(settings.data || null);
+        });
     },
 
     // Debounced AJAX for search/input fields
-    debouncedAjax: function (action, ajaxOptions, delay = 300) {
-        const key = `debounce_${action}`;
+    debouncedAjax: function (url, options = {}, delay = 300) {
+        const key = `debounce_${url}`;
 
         if (this.debounceTimers.has(key)) {
             clearTimeout(this.debounceTimers.get(key));
         }
 
         return new Promise((resolve, reject) => {
-            const timer = setTimeout(() => {
-                $.ajax(ajaxOptions)
-                    .done(resolve)
-                    .fail(reject);
+            const timer = setTimeout(async () => {
+                try {
+                    const result = await this.ajax(url, options);
+                    resolve(result);
+                } catch (error) {
+                    reject(error);
+                }
                 this.debounceTimers.delete(key);
             }, delay);
 
@@ -364,94 +408,109 @@ window.KSP = {
         }
     },
 
-    // API endpoints
+    // API endpoints - RESTful implementation
     api: {
         // Member operations
-        getMemberDetails: function (memberId, callback) {
-            window.KSP.ajax('get_member_details', { member_id: memberId }, callback);
+        getMembers: async function (params = {}) {
+            const queryString = new URLSearchParams(params).toString();
+            const url = `/ksp_samosir/api/v1/members${queryString ? '?' + queryString : ''}`;
+            const response = await window.KSP.ajax(url, { method: 'GET' });
+            return response.success ? response.data : Promise.reject(new Error(response.error?.message || 'Failed to fetch members'));
         },
 
-        saveMember: function (memberData, callback) {
-            window.KSP.ajax('save_member', memberData, callback);
+        getMember: async function (memberId) {
+            const response = await window.KSP.ajax(`/ksp_samosir/api/v1/members/${memberId}`, { method: 'GET' });
+            return response.success ? response.data : Promise.reject(new Error(response.error?.message || 'Failed to fetch member'));
         },
 
-        deleteMember: function (memberId, callback) {
-            window.KSP.ajax('delete_member', { member_id: memberId }, callback);
+        createMember: async function (memberData) {
+            const response = await window.KSP.ajax('/ksp_samosir/api/v1/members', {
+                method: 'POST',
+                data: memberData
+            });
+            return response.success ? response.data : Promise.reject(new Error(response.error?.message || 'Failed to create member'));
+        },
+
+        updateMember: async function (memberId, memberData) {
+            const response = await window.KSP.ajax(`/ksp_samosir/api/v1/members/${memberId}`, {
+                method: 'PUT',
+                data: memberData
+            });
+            return response.success ? response.data : Promise.reject(new Error(response.error?.message || 'Failed to update member'));
+        },
+
+        deleteMember: async function (memberId) {
+            const response = await window.KSP.ajax(`/ksp_samosir/api/v1/members/${memberId}`, { method: 'DELETE' });
+            return response.success ? response.data : Promise.reject(new Error(response.error?.message || 'Failed to delete member'));
         },
 
         // Loan operations
-        getLoanDetails: function (loanId, callback) {
-            window.KSP.ajax('get_loan_details', { loan_id: loanId }, callback);
+        getLoans: async function (params = {}) {
+            const queryString = new URLSearchParams(params).toString();
+            const url = `/ksp_samosir/api/v1/loans${queryString ? '?' + queryString : ''}`;
+            const response = await window.KSP.ajax(url, { method: 'GET' });
+            return response.success ? response.data : Promise.reject(new Error(response.error?.message || 'Failed to fetch loans'));
         },
 
-        approveLoan: function (loanId, callback) {
-            window.KSP.ajax('approve_loan', { loan_id: loanId }, callback);
+        getLoan: async function (loanId) {
+            const response = await window.KSP.ajax(`/ksp_samosir/api/v1/loans/${loanId}`, { method: 'GET' });
+            return response.success ? response.data : Promise.reject(new Error(response.error?.message || 'Failed to fetch loan'));
         },
 
-        rejectLoan: function (loanId, reason, callback) {
-            window.KSP.ajax('reject_loan', { loan_id: loanId, reason: reason }, callback);
+        createLoan: async function (loanData) {
+            const response = await window.KSP.ajax('/ksp_samosir/api/v1/loans', {
+                method: 'POST',
+                data: loanData
+            });
+            return response.success ? response.data : Promise.reject(new Error(response.error?.message || 'Failed to create loan'));
+        },
+
+        approveLoan: async function (loanId) {
+            const response = await window.KSP.ajax(`/ksp_samosir/api/v1/loans/${loanId}/approve`, { method: 'PUT' });
+            return response.success ? response.data : Promise.reject(new Error(response.error?.message || 'Failed to approve loan'));
+        },
+
+        rejectLoan: async function (loanId, reason = '') {
+            const response = await window.KSP.ajax(`/ksp_samosir/api/v1/loans/${loanId}/reject`, {
+                method: 'PUT',
+                data: { reason }
+            });
+            return response.success ? response.data : Promise.reject(new Error(response.error?.message || 'Failed to reject loan'));
         },
 
         // Savings operations
-        getSavingsHistory: function (memberId, callback) {
-            window.KSP.ajax('get_savings_history', { member_id: memberId }, callback);
+        getSavings: async function (params = {}) {
+            const queryString = new URLSearchParams(params).toString();
+            const url = `/ksp_samosir/api/v1/savings${queryString ? '?' + queryString : ''}`;
+            const response = await window.KSP.ajax(url, { method: 'GET' });
+            return response.success ? response.data : Promise.reject(new Error(response.error?.message || 'Failed to fetch savings'));
         },
 
-        addSavings: function (savingsData, callback) {
-            window.KSP.ajax('add_savings', savingsData, callback);
+        getSaving: async function (savingId) {
+            const response = await window.KSP.ajax(`/ksp_samosir/api/v1/savings/${savingId}`, { method: 'GET' });
+            return response.success ? response.data : Promise.reject(new Error(response.error?.message || 'Failed to fetch saving'));
+        },
+
+        createSaving: async function (savingData) {
+            const response = await window.KSP.ajax('/ksp_samosir/api/v1/savings', {
+                method: 'POST',
+                data: savingData
+            });
+            return response.success ? response.data : Promise.reject(new Error(response.error?.message || 'Failed to create saving'));
         },
 
         // Address operations
-        getProvinces: function (callback) {
-            window.KSP.ajax('get_provinces', {}, callback);
+        getProvinces: async function () {
+            const response = await window.KSP.ajax('/ksp_samosir/api/v1/addresses', { method: 'GET' });
+            return response.success ? response.data : Promise.reject(new Error(response.error?.message || 'Failed to fetch provinces'));
         },
 
-        getRegencies: function (provinceId, callback) {
-            window.KSP.ajax('get_regencies', { province_id: provinceId }, callback);
-        },
-
-        getDistricts: function (regencyId, callback) {
-            window.KSP.ajax('get_districts', { regency_id: regencyId }, callback);
-        },
-
-        getVillages: function (districtId, callback) {
-            window.KSP.ajax('get_villages', { district_id: districtId }, callback);
-        },
-
-        searchAddress: function (keyword, type, callback) {
-            window.KSP.ajax('search_address', { keyword: keyword, type: type }, callback);
-        },
-
-        // Settings operations
-        getSettings: function (callback) {
-            window.KSP.ajax('get_settings', {}, callback);
-        },
-
-        updateSettings: function (settingsData, callback) {
-            window.KSP.ajax('update_settings', settingsData, callback);
-        },
-
-        // Reports operations
-        getFinancialReport: function (params, callback) {
-            window.KSP.ajax('get_financial_report', params, callback);
-        },
-
-        getSHUReport: function (periodId, callback) {
-            window.KSP.ajax('get_shu_report', { period_id: periodId }, callback);
-        },
-
-        // Activity operations
-        getActivitySummary: function (params, callback) {
-            window.KSP.ajax('get_activity_summary', params, callback);
-        },
-
-        // Meeting operations
-        getMeetings: function (callback) {
-            window.KSP.ajax('get_meetings', {}, callback);
-        },
-
-        saveMeetingAttendance: function (attendanceData, callback) {
-            window.KSP.ajax('save_meeting_attendance', attendanceData, callback);
+        searchAddresses: async function (keyword, type = 'village') {
+            const response = await window.KSP.ajax('/ksp_samosir/api/v1/addresses', {
+                method: 'POST',
+                data: { keyword, type }
+            });
+            return response.success ? response.data : Promise.reject(new Error(response.error?.message || 'Failed to search addresses'));
         }
     },
 
@@ -478,6 +537,35 @@ window.KSP = {
 
         window.addEventListener('offline', function () {
             KSP.ui.showNotification('Koneksi internet terputus. Beberapa fitur mungkin tidak berfungsi.', 'warning', 0);
+        });
+    },
+
+    // Missing methods that were called in init()
+    setupEventListeners: function () {
+        // Global event listeners can be added here if needed
+        console.log('Event listeners setup completed');
+    },
+
+    setupTooltips: function () {
+        // Initialize Bootstrap tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    },
+
+    setupModals: function () {
+        // Initialize Bootstrap modals
+        const modalTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="modal"]'));
+        modalTriggerList.map(function (modalTriggerEl) {
+            modalTriggerEl.addEventListener('click', function () {
+                const target = this.getAttribute('data-bs-target');
+                const modal = document.querySelector(target);
+                if (modal) {
+                    const bsModal = new bootstrap.Modal(modal);
+                    bsModal.show();
+                }
+            });
         });
     },
 

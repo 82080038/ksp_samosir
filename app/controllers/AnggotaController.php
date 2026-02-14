@@ -10,7 +10,7 @@ class AnggotaController extends BaseController {
      * Display paginated list of anggota with stats.
      */
     public function index() {
-        // $this->ensureLoginAndRole([.*]); // DISABLED for development
+        // $this->ensureLoginAndRole(['admin', 'staff']); // DISABLED for development
 
         require_once __DIR__ . '/../shared/php/mobile_optimizer.php';
 
@@ -53,7 +53,7 @@ class AnggotaController extends BaseController {
      * Show create form.
      */
     public function create() {
-        // $this->ensureLoginAndRole([.*]); // DISABLED for development
+        // $this->ensureLoginAndRole(['admin', 'staff']); // DISABLED for development
         $this->render(__DIR__ . '/../views/anggota/create.php');
     }
 
@@ -61,7 +61,7 @@ class AnggotaController extends BaseController {
      * Store new anggota with validation and transaction.
      */
     public function store() {
-        // // $this->ensureLoginAndRole([.*]); // DISABLED for development // DISABLED for development
+        // $this->ensureLoginAndRole(['admin', 'staff']); // DISABLED for development
         
         $data = $this->collectInput();
         $error = $this->validateInput($data);
@@ -109,7 +109,7 @@ class AnggotaController extends BaseController {
      * Show edit form with prefilled data.
      */
     public function edit($id) {
-        // // $this->ensureLoginAndRole([.*]); // DISABLED for development // DISABLED for development
+        // $this->ensureLoginAndRole(['admin', 'staff']); // DISABLED for development
         $row = fetchRow("SELECT * FROM anggota WHERE id = ?", [$id], 'i');
         if (!$row) {
             flashMessage('error', 'Data anggota tidak ditemukan');
@@ -122,7 +122,7 @@ class AnggotaController extends BaseController {
      * Update anggota with validation and transaction.
      */
     public function update($id) {
-        // // $this->ensureLoginAndRole([.*]); // DISABLED for development // DISABLED for development
+        // $this->ensureLoginAndRole(['admin', 'staff']); // DISABLED for development
         
         $data = $this->collectInput();
         $error = $this->validateInput($data);
@@ -168,7 +168,7 @@ class AnggotaController extends BaseController {
      * Soft delete anggota by setting status to 'keluar'.
      */
     public function delete($id) {
-        // $this->ensureLoginAndRole([.*]); // DISABLED for development
+        // $this->ensureLoginAndRole(['admin', 'staff']); // DISABLED for development
         runInTransaction(function($conn) use ($id) {
             $stmt = $conn->prepare("UPDATE anggota SET status = 'keluar' WHERE id = ?");
             $stmt->bind_param('i', $id);
