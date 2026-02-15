@@ -29,7 +29,7 @@ class CooperativeComplianceController extends BaseController {
         $recentAudits = $this->getRecentAudits($coopId);
         $regulatoryAlerts = $this->getRegulatoryAlerts($coopId);
 
-        $this->render(__DIR__ . '/../views/compliance/dashboard.php', [
+        $this->render('compliance/dashboard', [
             'compliance_status' => $complianceStatus,
             'upcoming_deadlines' => $upcomingDeadlines,
             'recent_audits' => $recentAudits,
@@ -55,7 +55,7 @@ class CooperativeComplianceController extends BaseController {
         // Calculate quorum status
         $quorumStatus = $this->calculateQuorumStatus($currentRAT);
 
-        $this->render(__DIR__ . '/../views/compliance/rat_management.php', [
+        $this->render('compliance/rat_management', [
             'current_rat' => $currentRAT,
             'historical_rats' => $historicalRATs,
             'quorum_status' => $quorumStatus,
@@ -90,7 +90,7 @@ class CooperativeComplianceController extends BaseController {
             }
         }
 
-        $this->render(__DIR__ . '/../views/compliance/schedule_rat.php', [
+        $this->render('compliance/schedule_rat', [
             'current_year' => date('Y'),
             'next_year' => date('Y') + 1
         ]);
@@ -115,7 +115,7 @@ class CooperativeComplianceController extends BaseController {
         $attendance = $this->getRATAttendance($ratId);
         $memberStats = $this->getMemberAttendanceStats($coopId);
 
-        $this->render(__DIR__ . '/../views/compliance/rat_attendance.php', [
+        $this->render('compliance/rat_attendance', [
             'rat' => $rat,
             'attendance' => $attendance,
             'member_stats' => $memberStats
@@ -163,7 +163,7 @@ class CooperativeComplianceController extends BaseController {
         // Get RAT results
         $results = $this->getRATResults($ratId);
 
-        $this->render(__DIR__ . '/../views/compliance/rat_results.php', [
+        $this->render('compliance/rat_results', [
             'rat' => $rat,
             'results' => $results
         ]);
@@ -211,7 +211,7 @@ class CooperativeComplianceController extends BaseController {
         $reports = $this->getRegulatoryReports($coopId);
         $complianceStatus = $this->getReportingComplianceStatus($coopId);
 
-        $this->render(__DIR__ . '/../views/compliance/regulatory_reports.php', [
+        $this->render('compliance/regulatory_reports', [
             'report_types' => $reportTypes,
             'reports' => $reports,
             'compliance_status' => $complianceStatus
@@ -262,7 +262,7 @@ class CooperativeComplianceController extends BaseController {
         $vacantPositions = $this->getVacantGovernancePositions($coopId);
         $termExpirations = $this->getUpcomingTermExpirations($coopId);
 
-        $this->render(__DIR__ . '/../views/compliance/governance_management.php', [
+        $this->render('compliance/governance_management', [
             'governance_bodies' => $governanceBodies,
             'vacant_positions' => $vacantPositions,
             'term_expirations' => $termExpirations
@@ -301,7 +301,7 @@ class CooperativeComplianceController extends BaseController {
         $coopId = $this->getCurrentCooperativeId();
         $activeMembers = $this->getActiveMembers($coopId);
 
-        $this->render(__DIR__ . '/../views/compliance/appoint_governance.php', [
+        $this->render('compliance/appoint_governance', [
             'active_members' => $activeMembers
         ]);
     }
@@ -320,7 +320,7 @@ class CooperativeComplianceController extends BaseController {
         $annualProfit = $this->getAnnualProfit($coopId, $currentYear);
         $minimumAllocation = $annualProfit * 0.25; // 25% of profit
 
-        $this->render(__DIR__ . '/../views/compliance/reserve_fund_management.php', [
+        $this->render('compliance/reserve_fund_management', [
             'reserve_funds' => $reserveFunds,
             'annual_profit' => $annualProfit,
             'minimum_allocation' => $minimumAllocation,
@@ -377,7 +377,7 @@ class CooperativeComplianceController extends BaseController {
         $upcomingAudits = $this->getUpcomingAudits($coopId);
         $auditRecommendations = $this->getAuditRecommendations($coopId);
 
-        $this->render(__DIR__ . '/../views/compliance/compliance_audits.php', [
+        $this->render('compliance/compliance_audits', [
             'audits' => $audits,
             'upcoming_audits' => $upcomingAudits,
             'audit_recommendations' => $auditRecommendations
@@ -417,7 +417,7 @@ class CooperativeComplianceController extends BaseController {
         $expiringDocuments = $this->getExpiringDocuments($coopId);
         $missingDocuments = $this->getMissingRequiredDocuments($coopId);
 
-        $this->render(__DIR__ . '/../views/compliance/legal_documents.php', [
+        $this->render('compliance/legal_documents', [
             'documents' => $documents,
             'expiring_documents' => $expiringDocuments,
             'missing_documents' => $missingDocuments
@@ -489,12 +489,12 @@ class CooperativeComplianceController extends BaseController {
     }
 
     private function checkGovernanceCompliance($coopId) {
-        $governanceCount = fetchRow("SELECT COUNT(*) as count FROM governance_bodies WHERE cooperative_id = ? AND status = 'active'", [$coopId], 'i')['count'];
+        $governanceCount = (fetchRow("SELECT COUNT(*) as count FROM governance_bodies WHERE cooperative_id = ? AND status = 'active'", [$coopId], 'i') ?? [])['count'] ?? 0;
         return $governanceCount >= 5 ? 'compliant' : 'non_compliant';
     }
 
     private function checkFinancialCompliance($coopId) {
-        $reportCount = fetchRow("SELECT COUNT(*) as count FROM regulatory_reports WHERE cooperative_id = ? AND approval_status = 'approved'", [$coopId], 'i')['count'];
+        $reportCount = (fetchRow("SELECT COUNT(*) as count FROM regulatory_reports WHERE cooperative_id = ? AND approval_status = 'approved'", [$coopId], 'i') ?? [])['count'] ?? 0;
         return $reportCount >= 4 ? 'compliant' : 'non_compliant';
     }
 
@@ -505,7 +505,7 @@ class CooperativeComplianceController extends BaseController {
     }
 
     private function checkOperationalCompliance($coopId) {
-        $ratCount = fetchRow("SELECT COUNT(*) as count FROM rat_meetings WHERE cooperative_id = ? AND quorum_achieved = 1", [$coopId], 'i')['count'];
+        $ratCount = (fetchRow("SELECT COUNT(*) as count FROM rat_meetings WHERE cooperative_id = ? AND quorum_achieved = 1", [$coopId], 'i') ?? [])['count'] ?? 0;
         return $ratCount >= 2 ? 'compliant' : 'non_compliant';
     }
 
@@ -570,7 +570,7 @@ class CooperativeComplianceController extends BaseController {
             WHERE cooperative_id = ?
             ORDER BY created_at DESC
             LIMIT 5
-        ", [$coopId], 'i');
+        ", [$coopId], 'i') ?? [];
     }
 
     private function getRegulatoryAlerts($coopId) {
@@ -607,26 +607,26 @@ class CooperativeComplianceController extends BaseController {
     private function getHistoricalRATs($coopId) { return []; }
     private function calculateQuorumStatus($rat) { return ['achieved' => false, 'percentage' => 0]; }
     private function getRAT($ratId) { return fetchRow("SELECT * FROM rat_meetings WHERE id = ?", [$ratId], 'i'); }
-    private function getRATAttendance($ratId) { return fetchAll("SELECT * FROM rat_attendance WHERE rat_id = ?", [$ratId], 'i'); }
+    private function getRATAttendance($ratId) { return fetchAll("SELECT * FROM rat_attendance WHERE rat_id = ?", [$ratId], 'i') ?? []; }
     private function getMemberAttendanceStats($coopId) { return ['total_members' => 0, 'attended_last_rat' => 0]; }
     private function recordMemberAttendance($ratId, $memberId, $type, $proxyName, $proxyNik) { return ['success' => true]; }
     private function getRATResults($ratId) { return []; }
     private function saveRATResults($ratId, $results) { return ['success' => true]; }
     private function getRequiredReportTypes() { return ['monthly_financial', 'quarterly_financial', 'annual_financial']; }
-    private function getRegulatoryReports($coopId) { return fetchAll("SELECT * FROM regulatory_reports WHERE cooperative_id = ?", [$coopId], 'i'); }
+    private function getRegulatoryReports($coopId) { return fetchAll("SELECT * FROM regulatory_reports WHERE cooperative_id = ?", [$coopId], 'i') ?? []; }
     private function getReportingComplianceStatus($coopId) { return ['compliant' => true, 'score' => 95]; }
     private function saveReportFile($reportData, $type, $period) { return '/reports/' . $type . '_' . $period . '.pdf'; }
-    private function getGovernanceBodies($coopId) { return fetchAll("SELECT * FROM governance_bodies WHERE cooperative_id = ?", [$coopId], 'i'); }
+    private function getGovernanceBodies($coopId) { return fetchAll("SELECT * FROM governance_bodies WHERE cooperative_id = ?", [$coopId], 'i') ?? []; }
     private function getVacantGovernancePositions($coopId) { return []; }
     private function getUpcomingTermExpirations($coopId) { return []; }
     private function appointGovernanceMemberData($data) { return ['success' => true]; }
-    private function getActiveMembers($coopId) { return fetchAll("SELECT * FROM cooperative_members WHERE cooperative_id = ? AND membership_status = 'active'", [$coopId], 'i'); }
-    private function getReserveFunds($coopId, $year) { return fetchAll("SELECT * FROM reserve_funds WHERE cooperative_id = ? AND fund_year = ?", [$coopId, $year], 'ii'); }
+    private function getActiveMembers($coopId) { return fetchAll("SELECT * FROM cooperative_members WHERE cooperative_id = ? AND membership_status = 'active'", [$coopId], 'i') ?? []; }
+    private function getReserveFunds($coopId, $year) { return fetchAll("SELECT * FROM reserve_funds WHERE cooperative_id = ? AND fund_year = ?", [$coopId, $year], 'ii') ?? []; }
     private function getAnnualProfit($coopId, $year) { return 100000000; }
-    private function getComplianceAudits($coopId) { return fetchAll("SELECT * FROM compliance_audits WHERE cooperative_id = ?", [$coopId], 'i'); }
+    private function getComplianceAudits($coopId) { return fetchAll("SELECT * FROM compliance_audits WHERE cooperative_id = ?", [$coopId], 'i') ?? []; }
     private function getUpcomingAudits($coopId) { return []; }
     private function getAuditRecommendations($coopId) { return []; }
-    private function getLegalDocuments($coopId) { return fetchAll("SELECT * FROM legal_documents WHERE cooperative_id = ?", [$coopId], 'i'); }
+    private function getLegalDocuments($coopId) { return fetchAll("SELECT * FROM legal_documents WHERE cooperative_id = ?", [$coopId], 'i') ?? []; }
     private function getExpiringDocuments($coopId) { return []; }
     private function getMissingRequiredDocuments($coopId) { return []; }
     private function uploadDocumentFile($file) { return ['success' => true, 'file_path' => '/uploads/documents/' . $file['name']]; }

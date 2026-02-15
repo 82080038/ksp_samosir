@@ -1,80 +1,51 @@
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <div>
-        <h2>Dashboard SHU & Dividen</h2>
-        <p class="text-muted">Kelola Sisa Hasil Usaha (SHU) dan pembagian dividen</p>
+<?php
+require_once __DIR__ . '/../../../app/helpers/DependencyManager.php';
+$pageInfo = initView();
+$user = getCurrentUser();
+$role = $user['role'] ?? null;
+$recent_distributions = $recent_distributions ?? [];
+if (file_exists(__DIR__ . '/../../../app/helpers/FormatHelper.php')) {
+    require_once __DIR__ . '/../../../app/helpers/FormatHelper.php';
+}
+?>
+
+<!-- Page Header -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom" id="page-header">
+    <h1 class="h2 page-title" id="page-title" style="color: black;" data-page="shu">SHU (Sisa Hasil Usaha)</h1>
+    <div class="btn-toolbar mb-2 mb-md-0" id="page-actions">
+        <div class="btn-group me-2">
+            <a href="<?= base_url('shu/calculate') ?>" class="btn btn-sm btn-primary">
+                <i class="bi bi-calculator"></i> Hitung SHU
+            </a>
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="location.reload()">
+                <i class="bi bi-arrow-clockwise"></i> Refresh
+            </button>
+        </div>
     </div>
 </div>
 
-<!-- Statistics Cards -->
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card bg-success text-white">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h5 class="card-title mb-0">Rp <?= formatCurrency($stats['total_shu_distributed']) ?></h5>
-                        <p class="card-text">Total SHU Dibagikan</p>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="fas fa-coins fa-2x opacity-75"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
+<p class="text-muted mb-3">Kelola Sisa Hasil Usaha (SHU) dan pembagian dividen</p>
+
+<!-- Flash Messages -->
+<?php if ($error = getFlashMessage('error')): ?>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i><?= $error ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
-    <div class="col-md-3">
-        <div class="card bg-info text-white">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h5 class="card-title mb-0">Rp <?= formatCurrency($stats['total_dividends_distributed']) ?></h5>
-                        <p class="card-text">Total Dividen Dibagikan</p>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="fas fa-chart-line fa-2x opacity-75"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
+<?php endif; ?>
+<?php if ($success = getFlashMessage('success')): ?>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-2"></i><?= $success ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
-    <div class="col-md-3">
-        <div class="card bg-warning text-white">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h5 class="card-title mb-0"><?= $stats['pending_member_payments'] ?></h5>
-                        <p class="card-text">Pembayaran SHU Pending</p>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="fas fa-clock fa-2x opacity-75"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-danger text-white">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h5 class="card-title mb-0"><?= $stats['pending_investor_payments'] ?></h5>
-                        <p class="card-text">Pembayaran Dividen Pending</p>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="fas fa-exclamation-triangle fa-2x opacity-75"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+<?php endif; ?>
 
 <!-- Quick Actions -->
 <div class="row mb-4">
     <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <h5>Aksi Cepat</h5>
+                
             </div>
             <div class="card-body">
                 <div class="row">
@@ -109,7 +80,7 @@
     <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <h5>Distribusi Terbaru</h5>
+                
             </div>
             <div class="card-body">
                 <?php if (empty($recent_distributions)): ?>

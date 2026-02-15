@@ -285,6 +285,10 @@
                 method: 'GET',
                 data: params
             }).then(response => {
+                // Validate response structure
+                if (!response || typeof response !== 'object') {
+                    throw new Error('Invalid response format');
+                }
                 this.renderData(response);
             }).catch(error => {
                 KSP.showError('Failed to load data: ' + error.message);
@@ -301,14 +305,34 @@
 
         tbody.empty();
 
-        if (!response.data || response.data.length === 0) {
+        // Handle different response formats
+        let data = response.data || [];
+        
+        // If data is not an array, try to extract array from response
+        if (!Array.isArray(data)) {
+            if (data.items && Array.isArray(data.items)) {
+                // Handle nested structure like { data: { items: [...] } }
+                data = data.items;
+            } else if (response.anggota && Array.isArray(response.anggota)) {
+                data = response.anggota;
+            } else if (response.members && Array.isArray(response.members)) {
+                data = response.members;
+            } else if (response.items && Array.isArray(response.items)) {
+                data = response.items;
+            } else {
+                console.warn('Response data is not an array:', response);
+                data = [];
+            }
+        }
+
+        if (data.length === 0) {
             tableEl.hide();
             emptyEl.show();
             return;
         }
 
         // Render rows
-        response.data.forEach((item, index) => {
+        data.forEach((item, index) => {
             const row = $('<tr>');
 
             // Add data columns

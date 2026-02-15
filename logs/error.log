@@ -1,0 +1,32 @@
+[15-Feb-2026 00:49:31 Asia/Jakarta] Query error: Unknown column 'nomor_jurnal' in 'SELECT' SQL: SELECT nomor_jurnal FROM jurnal ORDER BY id DESC LIMIT 1
+[15-Feb-2026 00:49:31 Asia/Jakarta] Query error: Unknown column 'is_active' in 'WHERE' SQL: SELECT COUNT(*) as total FROM inventory_items WHERE is_active = 1
+[15-Feb-2026 00:49:38 Asia/Jakarta] Query error: Unknown column 'nomor_jurnal' in 'SELECT' SQL: SELECT nomor_jurnal FROM jurnal ORDER BY id DESC LIMIT 1
+[15-Feb-2026 00:49:38 Asia/Jakarta] Query error: Unknown column 'is_active' in 'WHERE' SQL: SELECT COUNT(*) as total FROM inventory_items WHERE is_active = 1
+[15-Feb-2026 00:50:23 Asia/Jakarta] Uncaught exception: mysqli_stmt::bind_param(): Argument #2 cannot be passed by reference in /var/www/html/ksp_samosir/migration/migrate_data.php on line 90
+[15-Feb-2026 01:09:51 Asia/Jakarta] [Warning] filemtime(): stat failed for /var/www/html/ksp_samosir/app/views/layouts/../../public/assets/js/ksp-ajax.js in /var/www/html/ksp_samosir/app/views/layouts/main.php on line 267
+[15-Feb-2026 01:09:51 Asia/Jakarta] [Warning] filemtime(): stat failed for /var/www/html/ksp_samosir/app/views/layouts/../../public/assets/js/ksp-components.js in /var/www/html/ksp_samosir/app/views/layouts/main.php on line 270
+[15-Feb-2026 01:09:51 Asia/Jakarta] [Warning] filemtime(): stat failed for /var/www/html/ksp_samosir/app/views/layouts/../../public/assets/js/member-manager.js in /var/www/html/ksp_samosir/app/views/layouts/main.php on line 273
+[15-Feb-2026 01:09:51 Asia/Jakarta] [Warning] include(/var/www/html/ksp_samosir/app/views/layouts/../templates/modals.php): Failed to open stream: No such file or directory in /var/www/html/ksp_samosir/app/views/layouts/main.php on line 363
+[15-Feb-2026 01:09:51 Asia/Jakarta] [Warning] include(): Failed opening '/var/www/html/ksp_samosir/app/views/layouts/../templates/modals.php' for inclusion (include_path='.:/usr/share/php') in /var/www/html/ksp_samosir/app/views/layouts/main.php on line 363
+[15-Feb-2026 04:07:29 Asia/Jakarta] [Warning] Undefined array key "REQUEST_URI" in Command line code on line 3
+[15-Feb-2026 13:50:07 Asia/Jakarta] [Warning] require_once(/var/www/html/ksp_samosir/app/helpers/AuthHelper.php): Failed to open stream: No such file or directory in /var/www/html/ksp_samosir/app/helpers/DependencyManager.php on line 46
+[15-Feb-2026 13:50:07 Asia/Jakarta] PHP Fatal error:  Uncaught Error: Failed opening required '/var/www/html/ksp_samosir/app/helpers/AuthHelper.php' (include_path='.:/usr/share/php') in /var/www/html/ksp_samosir/app/helpers/DependencyManager.php:46
+Stack trace:
+#0 /var/www/html/ksp_samosir/app/helpers/DependencyManager.php(78): KSPDependencyManager::loadHelper()
+#1 /var/www/html/ksp_samosir/app/helpers/DependencyManager.php(118): KSPDependencyManager::initView()
+#2 /var/www/html/ksp_samosir/app/controllers/BaseController.php(16): initView()
+#3 /var/www/html/ksp_samosir/app/controllers/MasterCRUDController.php(20): BaseController->__construct()
+#4 /var/www/html/ksp_samosir/app/controllers/ProdukCRUDController.php(19): MasterCRUDController->__construct()
+#5 Command line code(10): ProdukCRUDController->__construct()
+#6 {main}
+  thrown in /var/www/html/ksp_samosir/app/helpers/DependencyManager.php on line 46
+[15-Feb-2026 13:50:07 Asia/Jakarta] Fatal Error: Uncaught Error: Failed opening required '/var/www/html/ksp_samosir/app/helpers/AuthHelper.php' (include_path='.:/usr/share/php') in /var/www/html/ksp_samosir/app/helpers/DependencyManager.php:46
+Stack trace:
+#0 /var/www/html/ksp_samosir/app/helpers/DependencyManager.php(78): KSPDependencyManager::loadHelper()
+#1 /var/www/html/ksp_samosir/app/helpers/DependencyManager.php(118): KSPDependencyManager::initView()
+#2 /var/www/html/ksp_samosir/app/controllers/BaseController.php(16): initView()
+#3 /var/www/html/ksp_samosir/app/controllers/MasterCRUDController.php(20): BaseController->__construct()
+#4 /var/www/html/ksp_samosir/app/controllers/ProdukCRUDController.php(19): MasterCRUDController->__construct()
+#5 Command line code(10): ProdukCRUDController->__construct()
+#6 {main}
+  thrown in /var/www/html/ksp_samosir/app/helpers/DependencyManager.php on line 46

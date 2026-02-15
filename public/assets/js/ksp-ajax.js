@@ -145,6 +145,11 @@ window.KSP = {
                 if (xhr.status >= 200 && xhr.status < 300) {
                     let response = xhr.response;
 
+                    // Handle null response when responseType is json
+                    if (response === null) {
+                        response = settings.dataType === 'json' ? {} : '';
+                    }
+
                     // Parse JSON if needed
                     if (settings.dataType === 'json' && typeof response === 'string') {
                         try {
@@ -156,7 +161,7 @@ window.KSP = {
                     }
 
                     // Cache successful GET responses
-                    if (cacheKey && response.success !== false) {
+                    if (cacheKey && response && response.success !== false) {
                         this.cache.set(cacheKey, {
                             data: response,
                             timestamp: Date.now()
@@ -415,12 +420,12 @@ window.KSP = {
             const queryString = new URLSearchParams(params).toString();
             const url = `/ksp_samosir/api/v1/members${queryString ? '?' + queryString : ''}`;
             const response = await window.KSP.ajax(url, { method: 'GET' });
-            return response.success ? response.data : Promise.reject(new Error(response.error?.message || 'Failed to fetch members'));
+            return response.success ? response.data : Promise.reject(new Error((response.error && response.error.message) || 'Failed to fetch members'));
         },
 
         getMember: async function (memberId) {
             const response = await window.KSP.ajax(`/ksp_samosir/api/v1/members/${memberId}`, { method: 'GET' });
-            return response.success ? response.data : Promise.reject(new Error(response.error?.message || 'Failed to fetch member'));
+            return response.success ? response.data : Promise.reject(new Error((response.error && response.error.message) || 'Failed to fetch member'));
         },
 
         createMember: async function (memberData) {
@@ -428,7 +433,7 @@ window.KSP = {
                 method: 'POST',
                 data: memberData
             });
-            return response.success ? response.data : Promise.reject(new Error(response.error?.message || 'Failed to create member'));
+            return response.success ? response.data : Promise.reject(new Error((response.error && response.error.message) || 'Failed to create member'));
         },
 
         updateMember: async function (memberId, memberData) {
@@ -436,12 +441,12 @@ window.KSP = {
                 method: 'PUT',
                 data: memberData
             });
-            return response.success ? response.data : Promise.reject(new Error(response.error?.message || 'Failed to update member'));
+            return response.success ? response.data : Promise.reject(new Error((response.error && response.error.message) || 'Failed to update member'));
         },
 
         deleteMember: async function (memberId) {
             const response = await window.KSP.ajax(`/ksp_samosir/api/v1/members/${memberId}`, { method: 'DELETE' });
-            return response.success ? response.data : Promise.reject(new Error(response.error?.message || 'Failed to delete member'));
+            return response.success ? response.data : Promise.reject(new Error((response.error && response.error.message) || 'Failed to delete member'));
         },
 
         // Loan operations
@@ -449,12 +454,12 @@ window.KSP = {
             const queryString = new URLSearchParams(params).toString();
             const url = `/ksp_samosir/api/v1/loans${queryString ? '?' + queryString : ''}`;
             const response = await window.KSP.ajax(url, { method: 'GET' });
-            return response.success ? response.data : Promise.reject(new Error(response.error?.message || 'Failed to fetch loans'));
+            return response.success ? response.data : Promise.reject(new Error((response.error && response.error.message) || 'Failed to fetch loans'));
         },
 
         getLoan: async function (loanId) {
             const response = await window.KSP.ajax(`/ksp_samosir/api/v1/loans/${loanId}`, { method: 'GET' });
-            return response.success ? response.data : Promise.reject(new Error(response.error?.message || 'Failed to fetch loan'));
+            return response.success ? response.data : Promise.reject(new Error((response.error && response.error.message) || 'Failed to fetch loan'));
         },
 
         createLoan: async function (loanData) {
@@ -462,12 +467,12 @@ window.KSP = {
                 method: 'POST',
                 data: loanData
             });
-            return response.success ? response.data : Promise.reject(new Error(response.error?.message || 'Failed to create loan'));
+            return response.success ? response.data : Promise.reject(new Error((response.error && response.error.message) || 'Failed to create loan'));
         },
 
         approveLoan: async function (loanId) {
             const response = await window.KSP.ajax(`/ksp_samosir/api/v1/loans/${loanId}/approve`, { method: 'PUT' });
-            return response.success ? response.data : Promise.reject(new Error(response.error?.message || 'Failed to approve loan'));
+            return response.success ? response.data : Promise.reject(new Error((response.error && response.error.message) || 'Failed to approve loan'));
         },
 
         rejectLoan: async function (loanId, reason = '') {
@@ -475,7 +480,7 @@ window.KSP = {
                 method: 'PUT',
                 data: { reason }
             });
-            return response.success ? response.data : Promise.reject(new Error(response.error?.message || 'Failed to reject loan'));
+            return response.success ? response.data : Promise.reject(new Error((response.error && response.error.message) || 'Failed to reject loan'));
         },
 
         // Savings operations
@@ -483,12 +488,12 @@ window.KSP = {
             const queryString = new URLSearchParams(params).toString();
             const url = `/ksp_samosir/api/v1/savings${queryString ? '?' + queryString : ''}`;
             const response = await window.KSP.ajax(url, { method: 'GET' });
-            return response.success ? response.data : Promise.reject(new Error(response.error?.message || 'Failed to fetch savings'));
+            return response.success ? response.data : Promise.reject(new Error((response.error && response.error.message) || 'Failed to fetch savings'));
         },
 
         getSaving: async function (savingId) {
             const response = await window.KSP.ajax(`/ksp_samosir/api/v1/savings/${savingId}`, { method: 'GET' });
-            return response.success ? response.data : Promise.reject(new Error(response.error?.message || 'Failed to fetch saving'));
+            return response.success ? response.data : Promise.reject(new Error((response.error && response.error.message) || 'Failed to fetch saving'));
         },
 
         createSaving: async function (savingData) {
@@ -496,13 +501,13 @@ window.KSP = {
                 method: 'POST',
                 data: savingData
             });
-            return response.success ? response.data : Promise.reject(new Error(response.error?.message || 'Failed to create saving'));
+            return response.success ? response.data : Promise.reject(new Error((response.error && response.error.message) || 'Failed to create saving'));
         },
 
         // Address operations
         getProvinces: async function () {
             const response = await window.KSP.ajax('/ksp_samosir/api/v1/addresses', { method: 'GET' });
-            return response.success ? response.data : Promise.reject(new Error(response.error?.message || 'Failed to fetch provinces'));
+            return response.success ? response.data : Promise.reject(new Error((response.error && response.error.message) || 'Failed to fetch provinces'));
         },
 
         searchAddresses: async function (keyword, type = 'village') {
@@ -510,7 +515,7 @@ window.KSP = {
                 method: 'POST',
                 data: { keyword, type }
             });
-            return response.success ? response.data : Promise.reject(new Error(response.error?.message || 'Failed to search addresses'));
+            return response.success ? response.data : Promise.reject(new Error((response.error && response.error.message) || 'Failed to search addresses'));
         }
     },
 

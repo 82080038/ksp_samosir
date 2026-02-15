@@ -16,12 +16,12 @@ class RapatController extends BaseController {
         $perPage = ITEMS_PER_PAGE;
         $offset = ($page - 1) * $perPage;
 
-        $total = fetchRow("SELECT COUNT(*) as count FROM rapat")['count'];
+        $total = (fetchRow("SELECT COUNT(*) as count FROM rapat") ?? [])['count'] ?? 0;
         $totalPages = ceil($total / $perPage);
 
         $rapat = fetchAll("SELECT r.*, u.full_name as created_by_name FROM rapat r LEFT JOIN users u ON r.created_by = u.id ORDER BY r.tanggal DESC LIMIT ? OFFSET ?", [$perPage, $offset], 'ii');
 
-        $this->render(__DIR__ . '/../views/rapat/index.php', [
+        $this->render('rapat/index', [
             'rapat' => $rapat,
             'page' => $page,
             'totalPages' => $totalPages
@@ -33,7 +33,7 @@ class RapatController extends BaseController {
      */
     public function create() {
         // $this->ensureLoginAndRole(['pengurus', 'pengawas']); // DISABLED for development
-        $this->render(__DIR__ . '/../views/rapat/create.php');
+        $this->render('rapat/create');
     }
 
     /**
@@ -90,7 +90,7 @@ class RapatController extends BaseController {
             flashMessage('error', 'Data rapat tidak ditemukan');
             redirect('rapat');
         }
-        $this->render(__DIR__ . '/../views/rapat/edit.php', ['rapat' => $row]);
+        $this->render('rapat/edit', ['rapat' => $row]);
     }
 
     /**
@@ -177,7 +177,7 @@ class RapatController extends BaseController {
         $notulen = fetchAll("SELECT rn.*, u.full_name as created_by_name FROM rapat_notulen rn LEFT JOIN users u ON rn.created_by = u.id WHERE rn.rapat_id = ? ORDER BY rn.created_at DESC", [$id], 'i');
         $keputusan = fetchAll("SELECT rk.*, u.full_name as pic_name FROM rapat_keputusan rk LEFT JOIN users u ON rk.pic = u.id WHERE rk.rapat_id = ?", [$id], 'i');
 
-        $this->render(__DIR__ . '/../views/rapat/detail.php', [
+        $this->render('rapat/detail', [
             'rapat' => $rapat,
             'peserta' => $peserta,
             'notulen' => $notulen,

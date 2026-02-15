@@ -1,6 +1,31 @@
+<?php
+// Use centralized dependency management
+require_once __DIR__ . '/../../../app/helpers/DependencyManager.php';
+
+// Initialize view with all dependencies
+$pageInfo = initView();
+$user = getCurrentUser();
+$role = $user['role'] ?? null;
+?>
+
+<!-- Page Header with Dynamic Title -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom" id="page-header">
+    <h1 class="h2 page-title" id="page-title" style="color: black;" data-page="ai">AI Intelligence</h1>
+    <div class="btn-toolbar mb-2 mb-md-0" id="page-actions">
+        <div class="btn-group me-2">
+            <button type="button" class="btn btn-sm btn-primary" onclick="trainAIModel()">
+                <i class="bi bi-cpu"></i> Train Model
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-gear"></i> Settings
+            </button>
+        </div>
+    </div>
+</div>
+
 <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
-        <h2>Dashboard AI Features</h2>
+        <h1 class="h2" style="color: black;"><?= $pageInfo['title'] ?></h1>
         <p class="text-muted">Rekomendasi produk dan deteksi fraud menggunakan AI</p>
     </div>
 </div>

@@ -7,10 +7,25 @@
 class ApiController {
 
     private $pdo;
-    private $baseUrl = '/ksp_samosir/api/v1';
+    private $baseUrl = '/api/v1';
 
     public function __construct() {
-        $this->pdo = getConnection();
+        $this->pdo = getLegacyConnection();
+        $this->baseUrl = $this->getApiPrefix('/api/v1');
+    }
+
+    private function getBasePath() {
+        $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
+        if ($scriptDir === '/' || $scriptDir === '.') {
+            return '';
+        }
+        return rtrim($scriptDir, '/');
+    }
+
+    private function getApiPrefix($suffix) {
+        $basePath = $this->getBasePath();
+        $suffix = '/' . ltrim($suffix, '/');
+        return ($basePath === '' ? '' : $basePath) . $suffix;
     }
 
     /**
@@ -20,9 +35,14 @@ class ApiController {
         $method = $_SERVER['REQUEST_METHOD'];
         $path = $_SERVER['REQUEST_URI'];
 
-        // Remove base path
-        $path = str_replace('/ksp_samosir/api/v1', '', $path);
-        $path = str_replace('/ksp_samosir/api', '', $path);
+        // Remove base path dynamically
+        $apiV1Prefix = $this->getApiPrefix('/api/v1');
+        $apiPrefix = $this->getApiPrefix('/api');
+        if (strpos($path, $apiV1Prefix) === 0) {
+            $path = substr($path, strlen($apiV1Prefix));
+        } elseif (strpos($path, $apiPrefix) === 0) {
+            $path = substr($path, strlen($apiPrefix));
+        }
 
         // Parse path segments
         $segments = array_filter(explode('/', trim($path, '/')));

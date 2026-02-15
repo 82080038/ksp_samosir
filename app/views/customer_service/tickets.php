@@ -1,8 +1,25 @@
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>Kelola Tiket</h2>
-    <div class="btn-group">
-        <a href="<?= base_url('customer_service/createTicket') ?>" class="btn btn-primary btn-sm">Buat Tiket Baru</a>
-        <a href="<?= base_url('customer_service') ?>" class="btn btn-outline-secondary btn-sm">Kembali ke Dashboard</a>
+<?php
+// Use centralized dependency management
+require_once __DIR__ . '/../../../app/helpers/DependencyManager.php';
+
+// Initialize view with all dependencies
+$pageInfo = initView();
+$user = getCurrentUser();
+$role = $user['role'] ?? null;
+?>
+
+<!-- Page Header with Dynamic Title -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom" id="page-header">
+    <h1 class="h2 page-title" id="page-title" style="color: black;" data-page="cs-tickets">Kelola Tiket</h1>
+    <div class="btn-toolbar mb-2 mb-md-0" id="page-actions">
+        <div class="btn-group me-2">
+            <a href="<?= base_url('customer_service/createTicket') ?>" class="btn btn-sm btn-primary">
+                <i class="bi bi-plus-circle"></i> Buat Tiket Baru
+            </a>
+            <a href="<?= base_url('customer_service') ?>" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Kembali ke Dashboard
+            </a>
+        </div>
     </div>
 </div>
 

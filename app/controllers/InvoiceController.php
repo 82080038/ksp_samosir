@@ -14,7 +14,7 @@ class InvoiceController extends BaseController {
 
         $stats = $this->getInvoiceStats();
 
-        $this->render(__DIR__ . '/../views/invoice/index.php', [
+        $this->render('invoice/index', [
             'stats' => $stats
         ]);
     }
@@ -29,12 +29,12 @@ class InvoiceController extends BaseController {
         $perPage = ITEMS_PER_PAGE;
         $offset = ($page - 1) * $perPage;
 
-        $total = fetchRow("SELECT COUNT(*) as count FROM customer_invoices")['count'];
+        $total = (fetchRow("SELECT COUNT(*) as count FROM customer_invoices") ?? [])['count'] ?? 0;
         $totalPages = ceil($total / $perPage);
 
         $invoices = fetchAll("SELECT ci.*, p.no_faktur, u.full_name as customer_name FROM customer_invoices ci LEFT JOIN penjualan p ON ci.order_id = p.id LEFT JOIN users u ON ci.customer_id = u.id ORDER BY ci.created_at DESC LIMIT ? OFFSET ?", [$perPage, $offset], 'ii');
 
-        $this->render(__DIR__ . '/../views/invoice/customer_invoices.php', [
+        $this->render('invoice/customer_invoices', [
             'invoices' => $invoices,
             'page' => $page,
             'totalPages' => $totalPages
@@ -95,12 +95,12 @@ class InvoiceController extends BaseController {
         $perPage = ITEMS_PER_PAGE;
         $offset = ($page - 1) * $perPage;
 
-        $total = fetchRow("SELECT COUNT(*) as count FROM supplier_invoices")['count'];
+        $total = (fetchRow("SELECT COUNT(*) as count FROM supplier_invoices") ?? [])['count'] ?? 0;
         $totalPages = ceil($total / $perPage);
 
         $invoices = fetchAll("SELECT si.*, s.nama_perusahaan as supplier_name, po.nomor_po FROM supplier_invoices si LEFT JOIN suppliers s ON si.supplier_id = s.id LEFT JOIN purchase_orders po ON si.po_id = po.id ORDER BY si.created_at DESC LIMIT ? OFFSET ?", [$perPage, $offset], 'ii');
 
-        $this->render(__DIR__ . '/../views/invoice/supplier_invoices.php', [
+        $this->render('invoice/supplier_invoices', [
             'invoices' => $invoices,
             'page' => $page,
             'totalPages' => $totalPages
@@ -156,7 +156,7 @@ class InvoiceController extends BaseController {
 
         $pos = fetchAll("SELECT po.*, s.nama_perusahaan FROM purchase_orders po LEFT JOIN suppliers s ON po.supplier_id = s.id WHERE po.status = 'completed' ORDER BY po.created_at DESC");
 
-        $this->render(__DIR__ . '/../views/invoice/record_supplier_invoice.php', [
+        $this->render('invoice/record_supplier_invoice', [
             'pos' => $pos
         ]);
     }
@@ -203,22 +203,24 @@ class InvoiceController extends BaseController {
      * Get invoice statistics.
      */
     private function getInvoiceStats() {
-        $stats = [];
-
-        // Customer invoices
-        $stats['total_customer_invoices'] = fetchRow("SELECT COUNT(*) as total FROM customer_invoices")['total'];
-        $stats['paid_customer_invoices'] = fetchRow("SELECT COUNT(*) as total FROM customer_invoices WHERE status = 'paid'")['total'];
-        $stats['unpaid_customer_invoices'] = $stats['total_customer_invoices'] - $stats['paid_customer_invoices'];
-
-        // Supplier invoices
-        $stats['total_supplier_invoices'] = fetchRow("SELECT COUNT(*) as total FROM supplier_invoices")['total'];
-        $stats['paid_supplier_invoices'] = fetchRow("SELECT COUNT(*) as total FROM supplier_invoices WHERE status_pembayaran = 'lunas'")['total'];
-        $stats['unpaid_supplier_invoices'] = $stats['total_supplier_invoices'] - $stats['paid_supplier_invoices'];
-
-        // Overdue invoices
-        $stats['overdue_customer'] = fetchRow("SELECT COUNT(*) as total FROM customer_invoices WHERE status = 'unpaid' AND due_date < CURDATE()")['total'];
-        $stats['overdue_supplier'] = fetchRow("SELECT COUNT(*) as total FROM supplier_invoices WHERE status_pembayaran = 'belum_lunas' AND tanggal_jatuh_tempo < CURDATE()")['total'];
-
+        try {
+            $totalCust = (fetchRow("SELECT COUNT(*) as total FROM customer_invoices") ?? [])['total'] ?? 0;
+            $paidCust = (fetchRow("SELECT COUNT(*) as total FROM customer_invoices WHERE status = 'paid'") ?? [])['total'] ?? 0;
+            $totalSupp = (fetchRow("SELECT COUNT(*) as total FROM supplier_invoices") ?? [])['total'] ?? 0;
+            $paidSupp = (fetchRow("SELECT COUNT(*) as total FROM supplier_invoices WHERE status_pembayaran = 'lunas'") ?? [])['total'] ?? 0;
+            $stats = [
+                'total_customer_invoices' => $totalCust,
+                'paid_customer_invoices' => $paidCust,
+                'unpaid_customer_invoices' => $totalCust - $paidCust,
+                'total_supplier_invoices' => $totalSupp,
+                'paid_supplier_invoices' => $paidSupp,
+                'unpaid_supplier_invoices' => $totalSupp - $paidSupp,
+                'overdue_customer' => (fetchRow("SELECT COUNT(*) as total FROM customer_invoices WHERE status = 'unpaid' AND due_date < CURDATE()") ?? [])['total'] ?? 0,
+                'overdue_supplier' => (fetchRow("SELECT COUNT(*) as total FROM supplier_invoices WHERE status_pembayaran = 'belum_lunas' AND tanggal_jatuh_tempo < CURDATE()") ?? [])['total'] ?? 0,
+            ];
+        } catch (Exception $e) {
+            $stats = ['total_customer_invoices' => 0, 'paid_customer_invoices' => 0, 'unpaid_customer_invoices' => 0, 'total_supplier_invoices' => 0, 'paid_supplier_invoices' => 0, 'unpaid_supplier_invoices' => 0, 'overdue_customer' => 0, 'overdue_supplier' => 0];
+        }
         return $stats;
     }
 

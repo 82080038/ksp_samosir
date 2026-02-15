@@ -260,22 +260,22 @@ class RiskManagementSystem {
         ];
 
         // Fraud incidents
-        $fraudIncidents = fetchRow("
+        $fraudIncidents = (fetchRow("
             SELECT COUNT(*) as count FROM risk_metrics
             WHERE risk_type = 'fraud' AND created_at >= ?
-        ", [$startDate], 's')['count'];
+        ", [$startDate], 's') ?? [])['count'] ?? 0;
 
         // Compliance violations
-        $complianceViolations = fetchRow("
+        $complianceViolations = (fetchRow("
             SELECT COUNT(*) as count FROM compliance_metrics
             WHERE compliance_status = 'non_compliant' AND last_audit >= ?
-        ", [$startDate], 's')['count'];
+        ", [$startDate], 's') ?? [])['count'] ?? 0;
 
         // AML alerts
-        $amlAlerts = fetchRow("
+        $amlAlerts = (fetchRow("
             SELECT COUNT(*) as count FROM aml_monitoring
             WHERE alert_level IN ('medium', 'high') AND created_at >= ?
-        ", [$startDate], 's')['count'];
+        ", [$startDate], 's') ?? [])['count'] ?? 0;
 
         $summary['metrics'] = [
             'fraud_incidents' => $fraudIncidents,

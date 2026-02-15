@@ -8,7 +8,7 @@ class LaporanController extends BaseController {
         $stats = $this->getReportStats();
         $recent_reports = $this->getRecentReports();
 
-        $this->render(__DIR__ . '/../views/laporan/index.php', [
+        $this->render('laporan/index', [
             'stats' => $stats,
             'recent_reports' => $recent_reports
         ]);
@@ -22,7 +22,7 @@ class LaporanController extends BaseController {
         $member_chart = $this->getMemberChartData();
         $finance_chart = $this->getFinanceChartData();
 
-        $this->render(__DIR__ . '/../views/laporan/analytics.php', [
+        $this->render('laporan/analytics', [
             'sales_chart' => $sales_chart,
             'member_chart' => $member_chart,
             'finance_chart' => $finance_chart
@@ -40,14 +40,14 @@ class LaporanController extends BaseController {
 
             $data = $this->generateCustomReport($report_type, $start_date, $end_date, $filters);
 
-            $this->render(__DIR__ . '/../views/laporan/custom_report_result.php', [
+            $this->render('laporan/custom_report_result', [
                 'report_type' => $report_type,
                 'start_date' => $start_date,
                 'end_date' => $end_date,
                 'data' => $data
             ]);
         } else {
-            $this->render(__DIR__ . '/../views/laporan/custom_report.php');
+            $this->render('laporan/custom_report');
         }
     }
 
@@ -82,7 +82,7 @@ class LaporanController extends BaseController {
             exit;
         }
 
-        $this->render(__DIR__ . '/../views/laporan/simpanan.php', [
+        $this->render('laporan/simpanan', [
             'laporan' => $laporan,
             'period' => $period
         ]);
@@ -103,7 +103,7 @@ class LaporanController extends BaseController {
         $query .= " GROUP BY jp.id ORDER BY total_pinjaman DESC";
         $laporan = fetchAll($query);
 
-        $this->render(__DIR__ . '/../views/laporan/pinjaman.php', [
+        $this->render('laporan/pinjaman', [
             'laporan' => $laporan,
             'status_filter' => $status_filter
         ]);
@@ -124,7 +124,7 @@ class LaporanController extends BaseController {
         $query .= " GROUP BY DATE(tanggal_penjualan) ORDER BY tanggal DESC";
         $laporan = fetchAll($query);
 
-        $this->render(__DIR__ . '/../views/laporan/penjualan.php', [
+        $this->render('laporan/penjualan', [
             'laporan' => $laporan,
             'period' => $period
         ]);
@@ -136,21 +136,27 @@ class LaporanController extends BaseController {
         $as_of_date = $_GET['date'] ?? date('Y-m-d');
 
         // Calculate assets
-        $kas_bank = fetchRow("SELECT COALESCE(SUM(saldo), 0) as total FROM coa WHERE kode_coa LIKE '111%'")['total'];
-        $simpanan = fetchRow("SELECT COALESCE(SUM(saldo), 0) as total FROM simpanan WHERE status='aktif'")['total'];
-        $piutang_pinjaman = fetchRow("SELECT COALESCE(SUM(jumlah_pinjaman - COALESCE((SELECT SUM(pokok) FROM angsuran WHERE pinjaman_id = p.id), 0)), 0) as total FROM pinjaman p WHERE p.status IN ('disetujui', 'dicairkan')")['total'];
+        $kas_bank = fetchRow("SELECT COALESCE(SUM(saldo), 0) as total FROM coa WHERE kode_coa LIKE '111%'")['total'] ?? 0;
+        $simpanan = fetchRow("SELECT COALESCE(SUM(saldo), 0) as total FROM simpanan WHERE status='aktif'")['total'] ?? 0;
+        $piutang_pinjaman = fetchRow("SELECT COALESCE(SUM(jumlah_pinjaman - COALESCE((SELECT SUM(pokok) FROM angsuran WHERE pinjaman_id = p.id), 0)), 0) as total FROM pinjaman p WHERE p.status IN ('disetujui', 'dicairkan')")['total'] ?? 0;
 
         $total_aktiva = $kas_bank + $simpanan + $piutang_pinjaman;
 
         // Calculate liabilities & equity
         $simpanan_anggota = $simpanan; // Simpanan anggota sebagai liability
-        $pinjaman_diterima = fetchRow("SELECT COALESCE(SUM(saldo), 0) as total FROM coa WHERE kode_coa LIKE '21%'")['total'];
-        $modal = fetchRow("SELECT COALESCE(SUM(saldo), 0) as total FROM coa WHERE kode_coa LIKE '31%'")['total'];
-        $shu = fetchRow("SELECT COALESCE(SUM(shu_anggota), 0) as total FROM profit_distributions")['total'];
+        $pinjaman_diterima = fetchRow("SELECT COALESCE(SUM(saldo), 0) as total FROM coa WHERE kode_coa LIKE '21%'")['total'] ?? 0;
+
+        try {
+            $shu = fetchRow("SELECT COALESCE(SUM(shu_anggota), 0) as total FROM profit_distributions WHERE tahun = YEAR(CURRENT_DATE)")['total'] ?? 0;
+        } catch (Exception $e) {
+            $shu = 0; // Table might not exist during development
+        }
+
+        $modal = fetchRow("SELECT COALESCE(SUM(saldo), 0) as total FROM coa WHERE kode_coa LIKE '31%'")['total'] ?? 0;
 
         $total_passiva = $simpanan_anggota + $pinjaman_diterima + $modal + $shu;
 
-        $this->render(__DIR__ . '/../views/laporan/neraca.php', [
+        $this->render('laporan/neraca', [
             'as_of_date' => $as_of_date,
             'kas_bank' => $kas_bank,
             'simpanan' => $simpanan,
@@ -182,18 +188,24 @@ class LaporanController extends BaseController {
         }
 
         // Revenue
-        $penjualan = fetchRow("SELECT COALESCE(SUM(total_harga), 0) as total FROM penjualan WHERE status_pembayaran='lunas' AND DATE(tanggal_penjualan) BETWEEN ? AND ?", [$start_date, $end_date], 'ss')['total'];
-        $bunga_simpanan = fetchRow("SELECT COALESCE(SUM(jumlah), 0) as total FROM transaksi_simpanan WHERE jenis_transaksi='bunga' AND DATE(tanggal_transaksi) BETWEEN ? AND ?", [$start_date, $end_date], 'ss')['total'];
+        $penjualan = (fetchRow("SELECT COALESCE(SUM(total_harga), 0) as total FROM penjualan WHERE status_pembayaran='lunas' AND DATE(tanggal_penjualan) BETWEEN ? AND ?", [$start_date, $end_date], 'ss') ?? [])['total'] ?? 0;
+        $bunga_simpanan = (fetchRow("SELECT COALESCE(SUM(jumlah), 0) as total FROM transaksi_simpanan WHERE jenis_transaksi='bunga' AND DATE(tanggal_transaksi) BETWEEN ? AND ?", [$start_date, $end_date], 'ss') ?? [])['total'] ?? 0;
         $total_pendapatan = $penjualan + $bunga_simpanan;
 
         // Expenses
-        $beban_bunga_pinjaman = fetchRow("SELECT COALESCE(SUM(bunga), 0) as total FROM angsuran WHERE DATE(tanggal_bayar) BETWEEN ? AND ?", [$start_date, $end_date], 'ss')['total'];
-        $beban_operasional = fetchRow("SELECT COALESCE(SUM(jumlah), 0) as total FROM operational_costs WHERE DATE(tanggal) BETWEEN ? AND ?", [$start_date, $end_date], 'ss')['total'];
+        $beban_bunga_pinjaman = fetchRow("SELECT COALESCE(SUM(bunga), 0) as total FROM angsuran WHERE DATE(tanggal_bayar) BETWEEN ? AND ?", [$start_date, $end_date], 'ss')['total'] ?? 0;
+
+        try {
+            $beban_operasional = fetchRow("SELECT COALESCE(SUM(jumlah), 0) as total FROM operational_costs WHERE DATE(tanggal) BETWEEN ? AND ?", [$start_date, $end_date], 'ss')['total'] ?? 0;
+        } catch (Exception $e) {
+            $beban_operasional = 0; // Table might not exist during development
+        }
+
         $total_beban = $beban_bunga_pinjaman + $beban_operasional;
 
         $laba_bersih = $total_pendapatan - $total_beban;
 
-        $this->render(__DIR__ . '/../views/laporan/laba_rugi.php', [
+        $this->render('laporan/laba_rugi', [
             'period' => $period,
             'start_date' => $start_date,
             'end_date' => $end_date,
@@ -210,17 +222,34 @@ class LaporanController extends BaseController {
     private function getReportStats() {
         $stats = [];
 
-        $stats['total_reports_generated'] = fetchRow("SELECT COUNT(*) as total FROM reports")['total'];
-        $stats['reports_this_month'] = fetchRow("SELECT COUNT(*) as total FROM reports WHERE MONTH(created_at) = MONTH(CURRENT_DATE) AND YEAR(created_at) = YEAR(CURRENT_DATE)")['total'];
+        try {
+            $stats['total_reports_generated'] = fetchRow("SELECT COUNT(*) as total FROM reports")['total'] ?? 0;
+        } catch (Exception $e) {
+            $stats['total_reports_generated'] = 0; // Table might not exist during development
+        }
+
+        try {
+            $stats['reports_this_month'] = fetchRow("SELECT COUNT(*) as total FROM reports WHERE MONTH(created_at) = MONTH(CURRENT_DATE) AND YEAR(created_at) = YEAR(CURRENT_DATE)")['total'] ?? 0;
+        } catch (Exception $e) {
+            $stats['reports_this_month'] = 0; // Table might not exist during development
+        }
 
         // Most requested reports
-        $stats['popular_reports'] = fetchAll("SELECT jenis_laporan, COUNT(*) as count FROM reports GROUP BY jenis_laporan ORDER BY count DESC LIMIT 3");
+        try {
+            $stats['popular_reports'] = fetchAll("SELECT jenis_laporan, COUNT(*) as count FROM reports GROUP BY jenis_laporan ORDER BY count DESC LIMIT 3");
+        } catch (Exception $e) {
+            $stats['popular_reports'] = []; // Table might not exist during development
+        }
 
         return $stats;
     }
 
     private function getRecentReports() {
-        return fetchAll("SELECT * FROM reports ORDER BY created_at DESC LIMIT 5");
+        try {
+            return fetchAll("SELECT * FROM reports ORDER BY created_at DESC LIMIT 5") ?? [];
+        } catch (Exception $e) {
+            return [];
+        }
     }
 
     private function getSalesChartData() {
@@ -280,10 +309,10 @@ class LaporanController extends BaseController {
 
             case 'financial_overview':
                 $data = [
-                    'total_savings' => fetchRow("SELECT COALESCE(SUM(saldo), 0) as total FROM simpanan WHERE status='aktif'")['total'],
-                    'total_loans' => fetchRow("SELECT COALESCE(SUM(jumlah_pinjaman), 0) as total FROM pinjaman WHERE status IN ('disetujui', 'dicairkan')")['total'],
-                    'total_sales' => fetchRow("SELECT COALESCE(SUM(total_harga), 0) as total FROM penjualan WHERE status_pembayaran='lunas' AND DATE(tanggal_penjualan) BETWEEN ? AND ?", [$start_date, $end_date], 'ss')['total'],
-                    'total_shu' => fetchRow("SELECT COALESCE(SUM(shu_anggota), 0) as total FROM profit_distributions")['total']
+                    'total_savings' => (fetchRow("SELECT COALESCE(SUM(saldo), 0) as total FROM simpanan WHERE status='aktif'") ?? [])['total'] ?? 0,
+                    'total_loans' => (fetchRow("SELECT COALESCE(SUM(jumlah_pinjaman), 0) as total FROM pinjaman WHERE status IN ('disetujui', 'dicairkan')") ?? [])['total'] ?? 0,
+                    'total_sales' => (fetchRow("SELECT COALESCE(SUM(total_harga), 0) as total FROM penjualan WHERE status_pembayaran='lunas' AND DATE(tanggal_penjualan) BETWEEN ? AND ?", [$start_date, $end_date], 'ss') ?? [])['total'] ?? 0,
+                    'total_shu' => (fetchRow("SELECT COALESCE(SUM(shu_anggota), 0) as total FROM profit_distributions") ?? [])['total'] ?? 0
                 ];
                 break;
 

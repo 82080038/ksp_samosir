@@ -642,11 +642,11 @@ class BlockchainIntegration {
 
     public function getBlockchainStats() {
         return [
-            'total_transactions' => fetchRow("SELECT COUNT(*) as count FROM blockchain_transactions", [], '')['count'],
-            'active_contracts' => fetchRow("SELECT COUNT(*) as count FROM smart_contracts WHERE status = 'active'", [], '')['count'],
-            'total_assets' => fetchRow("SELECT COUNT(*) as count FROM digital_assets WHERE is_active = TRUE", [], '')['count'],
-            'active_proposals' => fetchRow("SELECT COUNT(*) as count FROM governance_proposals WHERE status = 'active'", [], '')['count'],
-            'total_staked' => fetchRow("SELECT COALESCE(SUM(staked_amount), 0) as total FROM token_staking WHERE status = 'active'", [], '')['total']
+            'total_transactions' => (fetchRow("SELECT COUNT(*) as count FROM blockchain_transactions", [], '') ?? [])['count'] ?? 0,
+            'active_contracts' => (fetchRow("SELECT COUNT(*) as count FROM smart_contracts WHERE status = 'active'", [], '') ?? [])['count'] ?? 0,
+            'total_assets' => (fetchRow("SELECT COUNT(*) as count FROM digital_assets WHERE is_active = TRUE", [], '') ?? [])['count'] ?? 0,
+            'active_proposals' => (fetchRow("SELECT COUNT(*) as count FROM governance_proposals WHERE status = 'active'", [], '') ?? [])['count'] ?? 0,
+            'total_staked' => (fetchRow("SELECT COALESCE(SUM(staked_amount), 0) as total FROM token_staking WHERE status = 'active'", [], '') ?? [])['total'] ?? 0
         ];
     }
 }

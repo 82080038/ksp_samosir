@@ -1,44 +1,127 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Angsuran - <?= APP_NAME ?></title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-</head>
-<body>
-    <div class="container mt-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1>Daftar Angsuran</h1>
-            <a href="<?= base_url('angsuran/create') ?>" class="btn btn-primary">
-                <i class="bi bi-plus"></i> Buat Jadwal Angsuran
-            </a>
-        </div>
-        
-        <div class="card">
-            <div class="card-body">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>No Pinjaman</th>
-                            <th>Anggota</th>
-                            <th>Angsuran Ke</th>
-                            <th>Jumlah</th>
-                            <th>Jatuh Tempo</th>
-                            <th>Status</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td colspan="7" class="text-center">Belum ada data angsuran</td>
-                        </tr>
-                    </tbody>
-                </table>
+<?php
+// Use centralized dependency management
+require_once __DIR__ . '/../../../app/helpers/DependencyManager.php';
+
+// Initialize view with all dependencies
+$pageInfo = initView();
+$user = getCurrentUser();
+$role = $user['role'] ?? null;
+?>
+
+
+
+<!-- Page Header with Dynamic Title -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom" id="page-header">
+    <h1 class="h2 page-title" id="page-title" style="color: black;" data-page="pinjaman-angsuran">Angsuran</h1>
+    <div class="btn-toolbar mb-2 mb-md-0" id="page-actions">
+        <div class="btn-group me-2">
+                <a href="pinjaman" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Kembali
+                </a>
             </div>
-        </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+</div>
+
+<!-- Flash Messages -->
+<?php if ($error = getFlashMessage('error')): ?>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        <?= $error ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
+
+<?php if ($success = getFlashMessage('success')): ?>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-2"></i>
+        <?= $success ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
+
+
+
+
+
+<!-- Flash Messages -->
+<?php if ($error = getFlashMessage('error')): ?>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        <?= $error ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
+
+<?php if ($success = getFlashMessage('success')): ?>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-2"></i>
+        <?= $success ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
+
+<?php
+// Use centralized dependency management
+require_once __DIR__ . '/../../../app/helpers/DependencyManager.php';
+
+// Initialize view with all dependencies
+$pageInfo = initView();
+$user = getCurrentUser();
+$role = $user['role'] ?? null;
+?>
+
+
+
+</div>
+
+<!-- Page Header with Dynamic Title -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom" id="page-header">
+    <h1 class="h2 page-title" id="page-title" style="color: black;" data-page="pinjaman-angsuran">Angsuran</h1>
+    <div class="btn-toolbar mb-2 mb-md-0" id="page-actions">
+        <div class="btn-group me-2">
+                <a href="pinjaman" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Kembali
+                </a>
+            </div>
+    </div>
+</div>
+
+<!-- Flash Messages -->
+<?php if ($error = getFlashMessage('error')): ?>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        <?= $error ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
+
+<?php if ($success = getFlashMessage('success')): ?>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-2"></i>
+        <?= $success ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
+
+
+
+
+
+
+<!-- Flash Messages -->
+<?php if ($error = getFlashMessage("error")): ?>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        <?= $error ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
+
+<?php if ($success = getFlashMessage("success")): ?>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-2"></i>
+        <?= $success ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
+

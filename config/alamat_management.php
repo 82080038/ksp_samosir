@@ -4,32 +4,34 @@
  * KSP Samosir - Indonesian Address Integration
  */
 
+require_once __DIR__ . '/database_multi.php';
+
 /**
  * Get provinces list
  */
 function getProvinces() {
-    return fetchAll("SELECT id, name FROM alamat_db.provinces ORDER BY name");
+    return addressDB()->fetchAll("SELECT id, name FROM provinces ORDER BY name");
 }
 
 /**
  * Get regencies by province
  */
 function getRegencies($province_id) {
-    return fetchAll("SELECT id, name FROM alamat_db.regencies WHERE province_id = ? ORDER BY name", [$province_id], 'i');
+    return addressDB()->fetchAll("SELECT id, name FROM regencies WHERE province_id = ? ORDER BY name", [$province_id], 'i');
 }
 
 /**
  * Get districts by regency
  */
 function getDistricts($regency_id) {
-    return fetchAll("SELECT id, name FROM alamat_db.districts WHERE regency_id = ? ORDER BY name", [$regency_id], 'i');
+    return fetchAll("SELECT id, name FROM alamat_db.districts WHERE regency_id = ? ORDER BY name", [$regency_id], 'i') ?? [];
 }
 
 /**
  * Get villages by district
  */
 function getVillages($district_id) {
-    return fetchAll("SELECT id, name, kodepos FROM alamat_db.villages WHERE district_id = ? ORDER BY name", [$district_id], 'i');
+    return fetchAll("SELECT id, name, kodepos FROM alamat_db.villages WHERE district_id = ? ORDER BY name", [$district_id], 'i') ?? [];
 }
 
 /**
@@ -123,25 +125,25 @@ function searchAddress($keyword, $type = 'all') {
     
     switch ($type) {
         case 'province':
-            return fetchAll("SELECT id, name, 'province' as type FROM alamat_db.provinces WHERE name LIKE ? ORDER BY name", [$keyword], 's');
+            return fetchAll("SELECT id, name, 'province' as type FROM alamat_db.provinces WHERE name LIKE ? ORDER BY name", [$keyword], 's') ?? [];
         case 'regency':
             return fetchAll("
                 SELECT r.id, r.name, 'regency' as type, p.name as parent_name
                 FROM alamat_db.regencies r 
                 JOIN alamat_db.provinces p ON r.province_id = p.id 
-                WHERE r.name LIKE ? ORDER BY r.name", [$keyword], 's');
+                WHERE r.name LIKE ? ORDER BY r.name", [$keyword], 's') ?? [];
         case 'district':
             return fetchAll("
                 SELECT d.id, d.name, 'district' as type, r.name as parent_name
                 FROM alamat_db.districts d 
                 JOIN alamat_db.regencies r ON d.regency_id = r.id 
-                WHERE d.name LIKE ? ORDER BY d.name", [$keyword], 's');
+                WHERE d.name LIKE ? ORDER BY d.name", [$keyword], 's') ?? [];
         case 'village':
             return fetchAll("
                 SELECT v.id, v.name, 'village' as type, d.name as parent_name, v.kodepos
                 FROM alamat_db.villages v 
                 JOIN alamat_db.districts d ON v.district_id = d.id 
-                WHERE v.name LIKE ? ORDER BY v.name", [$keyword], 's');
+                WHERE v.name LIKE ? ORDER BY v.name", [$keyword], 's') ?? [];
         default:
             $provinces = fetchAll("SELECT id, name, 'province' as type FROM alamat_db.provinces WHERE name LIKE ? ORDER BY name LIMIT 5", [$keyword], 's');
             $regencies = fetchAll("

@@ -126,15 +126,15 @@ class AIArchitecture {
     }
 
     private function getAutomationRate() {
-        $total = fetchRow("SELECT COUNT(*) as total FROM ai_decisions", [], '')['total'];
-        $automated = fetchRow("SELECT COUNT(*) as automated FROM ai_decisions WHERE approved = TRUE AND approved_by IS NULL", [], '')['automated'];
+        $total = (fetchRow("SELECT COUNT(*) as total FROM ai_decisions", [], '') ?? [])['total'] ?? 0;
+        $automated = (fetchRow("SELECT COUNT(*) as automated FROM ai_decisions WHERE approved = TRUE AND approved_by IS NULL", [], '') ?? [])['automated'] ?? null;
 
         return $total > 0 ? round(($automated / $total) * 100, 2) : 0;
     }
 
     private function getAIErrorRate() {
-        $total = fetchRow("SELECT COUNT(*) as total FROM ai_messages WHERE sender = 'ai'", [], '')['total'];
-        $errors = fetchRow("SELECT COUNT(*) as errors FROM ai_messages WHERE sender = 'ai' AND confidence_score < 0.5", [], '')['errors'];
+        $total = (fetchRow("SELECT COUNT(*) as total FROM ai_messages WHERE sender = 'ai'", [], '') ?? [])['total'] ?? 0;
+        $errors = (fetchRow("SELECT COUNT(*) as errors FROM ai_messages WHERE sender = 'ai' AND confidence_score < 0.5", [], '') ?? [])['errors'] ?? 0;
 
         return $total > 0 ? round(($errors / $total) * 100, 2) : 0;
     }
@@ -392,24 +392,24 @@ class ConversationalAI {
 
     public function getStats() {
         return [
-            'total_conversations' => fetchRow("SELECT COUNT(*) as count FROM ai_conversations", [], '')['count'],
-            'active_conversations' => fetchRow("SELECT COUNT(*) as count FROM ai_conversations WHERE status = 'active'", [], '')['count'],
-            'average_satisfaction' => fetchRow("SELECT AVG(satisfaction_rating) as avg FROM ai_conversations WHERE satisfaction_rating IS NOT NULL", [], '')['avg'],
+            'total_conversations' => (fetchRow("SELECT COUNT(*) as count FROM ai_conversations", [], '') ?? [])['count'] ?? 0,
+            'active_conversations' => (fetchRow("SELECT COUNT(*) as count FROM ai_conversations WHERE status = 'active'", [], '') ?? [])['count'] ?? 0,
+            'average_satisfaction' => (fetchRow("SELECT AVG(satisfaction_rating) as avg FROM ai_conversations WHERE satisfaction_rating IS NOT NULL", [], '') ?? [])['avg'] ?? 0,
             'resolution_rate' => $this->calculateResolutionRate(),
             'transfer_rate' => $this->calculateTransferRate()
         ];
     }
 
     private function calculateResolutionRate() {
-        $resolved = fetchRow("SELECT COUNT(*) as count FROM ai_conversations WHERE resolved = TRUE", [], '')['count'];
-        $total = fetchRow("SELECT COUNT(*) as count FROM ai_conversations", [], '')['count'];
+        $resolved = (fetchRow("SELECT COUNT(*) as count FROM ai_conversations WHERE resolved = TRUE", [], '') ?? [])['count'] ?? 0;
+        $total = (fetchRow("SELECT COUNT(*) as count FROM ai_conversations", [], '') ?? [])['count'] ?? 0;
 
         return $total > 0 ? round(($resolved / $total) * 100, 2) : 0;
     }
 
     private function calculateTransferRate() {
-        $transferred = fetchRow("SELECT COUNT(*) as count FROM ai_conversations WHERE status = 'transferred'", [], '')['count'];
-        $total = fetchRow("SELECT COUNT(*) as count FROM ai_conversations", [], '')['count'];
+        $transferred = (fetchRow("SELECT COUNT(*) as count FROM ai_conversations WHERE status = 'transferred'", [], '') ?? [])['count'] ?? 0;
+        $total = (fetchRow("SELECT COUNT(*) as count FROM ai_conversations", [], '') ?? [])['count'] ?? 0;
 
         return $total > 0 ? round(($transferred / $total) * 100, 2) : 0;
     }
@@ -468,7 +468,7 @@ class AutomatedDecisionMaking {
             WHERE rule_category = ?
             AND is_active = TRUE
             ORDER BY priority DESC
-        ", [$decisionType], 's');
+        ", [$decisionType], 's') ?? [];
     }
 
     private function evaluateRule($rule, $inputData) {
@@ -616,17 +616,17 @@ class AutomatedDecisionMaking {
 
     public function getStats() {
         return [
-            'total_decisions' => fetchRow("SELECT COUNT(*) as count FROM ai_decisions", [], '')['count'],
-            'automated_decisions' => fetchRow("SELECT COUNT(*) as count FROM ai_decisions WHERE approved = TRUE AND approved_by IS NULL", [], '')['count'],
-            'average_confidence' => fetchRow("SELECT AVG(confidence_score) as avg FROM ai_decisions", [], '')['avg'],
+            'total_decisions' => (fetchRow("SELECT COUNT(*) as count FROM ai_decisions", [], '') ?? [])['count'] ?? 0,
+            'automated_decisions' => (fetchRow("SELECT COUNT(*) as count FROM ai_decisions WHERE approved = TRUE AND approved_by IS NULL", [], '') ?? [])['count'] ?? 0,
+            'average_confidence' => (fetchRow("SELECT AVG(confidence_score) as avg FROM ai_decisions", [], '') ?? [])['avg'] ?? 0,
             'approval_rate' => $this->calculateApprovalRate(),
             'accuracy_rate' => $this->calculateAccuracyRate()
         ];
     }
 
     private function calculateApprovalRate() {
-        $approved = fetchRow("SELECT COUNT(*) as count FROM ai_decisions WHERE approved = TRUE", [], '')['count'];
-        $total = fetchRow("SELECT COUNT(*) as count FROM ai_decisions", [], '')['count'];
+        $approved = (fetchRow("SELECT COUNT(*) as count FROM ai_decisions WHERE approved = TRUE", [], '') ?? [])['count'] ?? 0;
+        $total = (fetchRow("SELECT COUNT(*) as count FROM ai_decisions", [], '') ?? [])['count'] ?? 0;
 
         return $total > 0 ? round(($approved / $total) * 100, 2) : 0;
     }

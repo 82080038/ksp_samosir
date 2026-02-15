@@ -433,7 +433,7 @@ class InvestmentTracker {
                 AVG(roi_percentage) as avg_roi
             FROM roi_calculations
             GROUP BY roi_category
-        ", [], '');
+        ", [], '') ?? [];
     }
 
     private function getPaybackDistribution() {
@@ -450,7 +450,7 @@ class InvestmentTracker {
             FROM roi_calculations
             WHERE payback_months > 0
             GROUP BY payback_category
-        ", [], '');
+        ", [], '') ?? [];
     }
 
     private function getInvestmentUtilization() {

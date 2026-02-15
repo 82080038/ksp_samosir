@@ -263,7 +263,7 @@ function getAllPengurus() {
                 WHEN 'Bendahara' THEN 5
                 ELSE 6
             END
-    ");
+    ") ?? [];
 }
 
 /**
@@ -276,7 +276,7 @@ function getAllPengawas() {
         WHERE a.jabatan IN ('Ketua Pengawas', 'Anggota Pengawas')
         AND a.status = 'aktif'
         ORDER BY a.nama_lengkap
-    ");
+    ") ?? [];
 }
 
 /**

@@ -17,7 +17,7 @@ class MonitoringController extends BaseController {
         $recent_alerts = $this->getRecentAlerts();
         $health_checks = $this->getHealthChecks();
 
-        $this->render(__DIR__ . '/../views/monitoring/index.php', [
+        $this->render('monitoring/index', [
             'system_status' => $system_status,
             'performance_metrics' => $performance_metrics,
             'recent_alerts' => $recent_alerts,
@@ -61,7 +61,7 @@ class MonitoringController extends BaseController {
         $period = $_GET['period'] ?? '24h';
         $metrics = $this->getPerformanceReport($period);
 
-        $this->render(__DIR__ . '/../views/monitoring/performance_report.php', [
+        $this->render('monitoring/performance_report', [
             'metrics' => $metrics,
             'period' => $period
         ]);
@@ -95,12 +95,12 @@ class MonitoringController extends BaseController {
 
         $where_clause = !empty($where_conditions) ? 'WHERE ' . implode(' AND ', $where_conditions) : '';
 
-        $total = fetchRow("SELECT COUNT(*) as count FROM application_logs {$where_clause}", $params)['count'];
+        $total = (fetchRow("SELECT COUNT(*) as count FROM application_logs {$where_clause}", $params) ?? [])['count'] ?? 0;
         $totalPages = ceil($total / $perPage);
 
         $logs = fetchAll("SELECT al.*, u.full_name as user_name FROM application_logs al LEFT JOIN users u ON al.user_id = u.id {$where_clause} ORDER BY al.logged_at DESC LIMIT ? OFFSET ?", array_merge($params, [$perPage, $offset]), str_repeat('s', count($params)) . 'ii');
 
-        $this->render(__DIR__ . '/../views/monitoring/logs.php', [
+        $this->render('monitoring/logs', [
             'logs' => $logs,
             'page' => $page,
             'totalPages' => $totalPages,
@@ -121,12 +121,12 @@ class MonitoringController extends BaseController {
 
         $status = $_GET['status'] ?? 'active';
 
-        $total = fetchRow("SELECT COUNT(*) as count FROM alerts WHERE status = ?", [$status], 's')['count'];
+        $total = (fetchRow("SELECT COUNT(*) as count FROM alerts WHERE status = ?", [$status], 's') ?? [])['count'] ?? 0;
         $totalPages = ceil($total / $perPage);
 
         $alerts = fetchAll("SELECT a.*, u1.full_name as acknowledged_by_name, u2.full_name as resolved_by_name FROM alerts a LEFT JOIN users u1 ON a.acknowledged_by = u1.id LEFT JOIN users u2 ON a.resolved_by = u2.id WHERE a.status = ? ORDER BY a.created_at DESC LIMIT ? OFFSET ?", [$status, $perPage, $offset], 'sii');
 
-        $this->render(__DIR__ . '/../views/monitoring/alerts.php', [
+        $this->render('monitoring/alerts', [
             'alerts' => $alerts,
             'page' => $page,
             'totalPages' => $totalPages,
@@ -185,14 +185,14 @@ class MonitoringController extends BaseController {
      * Get recent alerts.
      */
     private function getRecentAlerts() {
-        return fetchAll("SELECT * FROM alerts WHERE status = 'active' ORDER BY created_at DESC LIMIT 5");
+        return fetchAll("SELECT * FROM alerts WHERE status = 'active' ORDER BY created_at DESC LIMIT 5") ?? [];
     }
 
     /**
      * Get health checks.
      */
     private function getHealthChecks() {
-        return fetchAll("SELECT * FROM system_health_checks ORDER BY last_check DESC LIMIT 10");
+        return fetchAll("SELECT * FROM system_health_checks ORDER BY last_check DESC LIMIT 10") ?? [];
     }
 
     /**
@@ -203,7 +203,7 @@ class MonitoringController extends BaseController {
 
         try {
             // Test basic connectivity
-            $conn = getConnection();
+            $conn = getLegacyConnection();
 
             // Test query execution
             $result = $conn->query("SELECT 1");
@@ -368,38 +368,56 @@ class MonitoringController extends BaseController {
      * Store monitoring data.
      */
     private function storeMonitoringData($check_type, $check_name, $status, $response_time, $memory_usage, $cpu_usage, $disk_usage, $error_message = null) {
-        runInTransaction(function($conn) use ($check_type, $check_name, $status, $response_time, $memory_usage, $cpu_usage, $disk_usage, $error_message) {
-            $stmt = $conn->prepare("INSERT INTO system_monitoring (check_type, check_name, status, response_time, memory_usage, cpu_usage, disk_usage, error_message, checked_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())");
-            $stmt->bind_param('sssdddds', $check_type, $check_name, $status, $response_time, $memory_usage, $cpu_usage, $disk_usage, $error_message);
-            $stmt->execute();
-            $stmt->close();
-        });
+        try {
+            runInTransaction(function($conn) use ($check_type, $check_name, $status, $response_time, $memory_usage, $cpu_usage, $disk_usage, $error_message) {
+                $stmt = $conn->prepare("INSERT INTO system_monitoring (check_type, check_name, status, response_time, memory_usage, cpu_usage, disk_usage, error_message, checked_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+                if ($stmt) {
+                    $stmt->bind_param('sssdddds', $check_type, $check_name, $status, $response_time, $memory_usage, $cpu_usage, $disk_usage, $error_message);
+                    $stmt->execute();
+                    $stmt->close();
+                }
+            });
+        } catch (Exception $e) {
+            error_log("MonitoringController::storeMonitoringData error: " . $e->getMessage());
+        }
     }
 
     /**
      * Store health check results.
      */
     private function storeHealthCheckResults($results) {
-        runInTransaction(function($conn) use ($results) {
-            foreach ($results as $category => $result) {
-                $stmt = $conn->prepare("INSERT INTO system_health_checks (check_name, check_category, last_check, status, response_time, details) VALUES (?, ?, NOW(), ?, ?, ?) ON DUPLICATE KEY UPDATE last_check = NOW(), status = VALUES(status), response_time = VALUES(response_time), details = VALUES(details)");
-                $stmt->bind_param('sssds', $category . '_check', $category, $result['status'], $result['response_time'] ?? 0, json_encode($result));
-                $stmt->execute();
-                $stmt->close();
-            }
-        });
+        try {
+            runInTransaction(function($conn) use ($results) {
+                foreach ($results as $category => $result) {
+                    $stmt = $conn->prepare("INSERT INTO system_health_checks (check_name, check_category, last_check, status, response_time, details) VALUES (?, ?, NOW(), ?, ?, ?) ON DUPLICATE KEY UPDATE last_check = NOW(), status = VALUES(status), response_time = VALUES(response_time), details = VALUES(details)");
+                    if ($stmt) {
+                        $stmt->bind_param('sssds', $category . '_check', $category, $result['status'], $result['response_time'] ?? 0, json_encode($result));
+                        $stmt->execute();
+                        $stmt->close();
+                    }
+                }
+            });
+        } catch (Exception $e) {
+            error_log("MonitoringController::storeHealthCheckResults error: " . $e->getMessage());
+        }
     }
 
     /**
      * Create alert.
      */
     private function createAlert($severity, $title, $message) {
-        runInTransaction(function($conn) use ($severity, $title, $message) {
-            $stmt = $conn->prepare("INSERT INTO alerts (alert_type, severity, title, message, status) VALUES ('system', ?, ?, ?, 'active')");
-            $stmt->bind_param('sss', $severity, $title, $message);
-            $stmt->execute();
-            $stmt->close();
-        });
+        try {
+            runInTransaction(function($conn) use ($severity, $title, $message) {
+                $stmt = $conn->prepare("INSERT INTO alerts (alert_type, severity, title, message, status) VALUES ('system', ?, ?, ?, 'active')");
+                if ($stmt) {
+                    $stmt->bind_param('sss', $severity, $title, $message);
+                    $stmt->execute();
+                    $stmt->close();
+                }
+            });
+        } catch (Exception $e) {
+            error_log("MonitoringController::createAlert error: " . $e->getMessage());
+        }
     }
 
     /**

@@ -17,6 +17,38 @@ class NotificationController extends BaseController {
         'pass_key' => 'your-sms-pass-key'  // Replace with actual key
     ];
 
+    public function index() {
+        // $this->ensureLoginAndRole(['admin', 'staff']); // DISABLED for development
+
+        $recent_notifications = $this->getRecentNotifications();
+        $stats = $this->getNotificationStats();
+
+        $this->render('notifications/index', [
+            'recent_notifications' => $recent_notifications,
+            'stats' => $stats
+        ]);
+    }
+
+    public function send($user_id) {
+        // $this->ensureLoginAndRole(['admin', 'staff']); // DISABLED for development
+
+        // Placeholder for sending notification to specific user
+        flashMessage('info', 'Send notification feature - under development');
+        redirect('notifications');
+    }
+
+    public function markRead($notification_id) {
+        // $this->ensureLoginAndRole(['admin', 'staff']); // DISABLED for development
+
+        // Placeholder for marking notification as read
+        flashMessage('info', 'Mark read feature - under development');
+        redirect('notifications');
+    }
+
+    public function bulkSend() {
+        $this->sendBulkNotification();
+    }
+
     /**
      * Send order confirmation notification.
      */
@@ -205,12 +237,25 @@ class NotificationController extends BaseController {
         });
     }
 
+    private function getRecentNotifications() {
+        return fetchAll("SELECT * FROM notification_logs ORDER BY sent_at DESC LIMIT 20") ?? [];
+    }
+
+    private function getNotificationStats() {
+        return [
+            'total_sent' => (fetchRow("SELECT COUNT(*) as count FROM notification_logs") ?? [])['count'] ?? 0,
+            'whatsapp_count' => (fetchRow("SELECT COUNT(*) as count FROM notification_logs WHERE channel = 'whatsapp'") ?? [])['count'] ?? 0,
+            'sms_count' => (fetchRow("SELECT COUNT(*) as count FROM notification_logs WHERE channel = 'sms'") ?? [])['count'] ?? 0,
+            'today_count' => (fetchRow("SELECT COUNT(*) as count FROM notification_logs WHERE DATE(sent_at) = CURDATE()") ?? [])['count'] ?? 0
+        ];
+    }
+
     /**
      * Send bulk notifications for marketing.
      */
     public function sendBulkNotification() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            $this->render(__DIR__ . '/../views/notification/bulk.php');
+            $this->render('notification/bulk');
             return;
         }
 

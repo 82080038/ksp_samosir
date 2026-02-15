@@ -15,7 +15,7 @@ class AgingController extends BaseController {
         $receivables_aging = $this->getReceivablesAging();
         $payables_aging = $this->getPayablesAging();
 
-        $this->render(__DIR__ . '/../views/aging/index.php', [
+        $this->render('aging/index', [
             'receivables_aging' => $receivables_aging,
             'payables_aging' => $payables_aging
         ]);
@@ -30,7 +30,7 @@ class AgingController extends BaseController {
         $as_of_date = $_GET['date'] ?? date('Y-m-d');
         $aging_data = $this->getReceivablesAging($as_of_date);
 
-        $this->render(__DIR__ . '/../views/aging/receivables_aging.php', [
+        $this->render('aging/receivables_aging', [
             'aging_data' => $aging_data,
             'as_of_date' => $as_of_date
         ]);
@@ -45,7 +45,7 @@ class AgingController extends BaseController {
         $as_of_date = $_GET['date'] ?? date('Y-m-d');
         $aging_data = $this->getPayablesAging($as_of_date);
 
-        $this->render(__DIR__ . '/../views/aging/payables_aging.php', [
+        $this->render('aging/payables_aging', [
             'aging_data' => $aging_data,
             'as_of_date' => $as_of_date
         ]);
@@ -87,7 +87,7 @@ class AgingController extends BaseController {
             }
         }
 
-        $this->render(__DIR__ . '/../views/aging/customer_aging_detail.php', [
+        $this->render('aging/customer_aging_detail', [
             'customer' => $customer,
             'aging_buckets' => $aging_buckets,
             'as_of_date' => $as_of_date
@@ -130,7 +130,7 @@ class AgingController extends BaseController {
             }
         }
 
-        $this->render(__DIR__ . '/../views/aging/supplier_aging_detail.php', [
+        $this->render('aging/supplier_aging_detail', [
             'supplier' => $supplier,
             'aging_buckets' => $aging_buckets,
             'as_of_date' => $as_of_date

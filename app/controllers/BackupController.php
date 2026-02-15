@@ -19,7 +19,14 @@ class BackupController extends BaseController {
         
         // Create backup directory if not exists
         if (!is_dir($this->backup_path)) {
-            mkdir($this->backup_path, 0755, true);
+            @mkdir($this->backup_path, 0755, true);
+        }
+        // Fallback to tmp if backup dir is not writable
+        if (!is_dir($this->backup_path) || !is_writable($this->backup_path)) {
+            $this->backup_path = sys_get_temp_dir() . '/ksp_samosir_backups/';
+            if (!is_dir($this->backup_path)) {
+                @mkdir($this->backup_path, 0755, true);
+            }
         }
     }
 
@@ -33,7 +40,7 @@ class BackupController extends BaseController {
         $backup_stats = $this->getBackupStats();
         $scheduled_backups = $this->getScheduledBackups();
 
-        $this->render(__DIR__ . '/../views/backup/index.php', [
+        $this->render('backup/index', [
             'backups' => $backups,
             'backup_stats' => $backup_stats,
             'scheduled_backups' => $scheduled_backups
@@ -125,7 +132,7 @@ class BackupController extends BaseController {
         // $this->ensureLoginAndRole(['admin']); // DISABLED for development
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            $this->render(__DIR__ . '/../views/backup/restore_confirm.php', [
+            $this->render('backup/restore_confirm', [
                 'filename' => $filename
             ]);
             return;
@@ -175,7 +182,7 @@ class BackupController extends BaseController {
 
         $current_schedule = fetchRow("SELECT * FROM backup_schedules ORDER BY created_at DESC LIMIT 1");
 
-        $this->render(__DIR__ . '/../views/backup/schedule.php', [
+        $this->render('backup/schedule', [
             'current_schedule' => $current_schedule
         ]);
     }
@@ -293,20 +300,27 @@ class BackupController extends BaseController {
      * List available backups.
      */
     private function listBackups() {
-        return fetchAll("SELECT * FROM backup_files ORDER BY created_at DESC LIMIT 20");
+        try {
+            return fetchAll("SELECT * FROM backup_files ORDER BY created_at DESC LIMIT 20") ?? [];
+        } catch (Exception $e) {
+            return [];
+        }
     }
 
     /**
      * Get backup statistics.
      */
     private function getBackupStats() {
-        $stats = [];
-
-        $stats['total_backups'] = fetchRow("SELECT COUNT(*) as total FROM backup_files")['total'];
-        $stats['total_size'] = fetchRow("SELECT SUM(file_size) as total FROM backup_files")['total'] ?? 0;
-        $stats['last_backup'] = fetchRow("SELECT created_at FROM backup_files ORDER BY created_at DESC LIMIT 1")['created_at'] ?? null;
-        $stats['oldest_backup'] = fetchRow("SELECT created_at FROM backup_files ORDER BY created_at ASC LIMIT 1")['created_at'] ?? null;
-
+        try {
+            $stats = [
+                'total_backups' => (fetchRow("SELECT COUNT(*) as total FROM backup_files") ?? [])['total'] ?? 0,
+                'total_size' => (fetchRow("SELECT COALESCE(SUM(file_size), 0) as total FROM backup_files") ?? [])['total'] ?? 0,
+                'last_backup' => (fetchRow("SELECT created_at FROM backup_files ORDER BY created_at DESC LIMIT 1") ?? [])['created_at'] ?? null,
+                'oldest_backup' => (fetchRow("SELECT created_at FROM backup_files ORDER BY created_at ASC LIMIT 1") ?? [])['created_at'] ?? null,
+            ];
+        } catch (Exception $e) {
+            $stats = ['total_backups' => 0, 'total_size' => 0, 'last_backup' => null, 'oldest_backup' => null];
+        }
         return $stats;
     }
 
@@ -314,7 +328,11 @@ class BackupController extends BaseController {
      * Get scheduled backups.
      */
     private function getScheduledBackups() {
-        return fetchAll("SELECT * FROM backup_schedules WHERE enabled = 1 ORDER BY created_at DESC");
+        try {
+            return fetchAll("SELECT * FROM backup_schedules WHERE enabled = 1 ORDER BY created_at DESC") ?? [];
+        } catch (Exception $e) {
+            return [];
+        }
     }
 
     /**

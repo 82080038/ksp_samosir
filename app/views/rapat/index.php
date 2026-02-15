@@ -1,8 +1,14 @@
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>Rapat</h2>
-    <div class="btn-group">
-        <a class="btn btn-primary btn-sm" href="<?= base_url('rapat/create') ?>">Tambah Rapat</a>
+<!-- Page Header -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom" id="page-header">
+    <h1 class="h2 page-title" id="page-title" style="color: black;" data-page="rapat">Rapat</h1>
+    <div class="btn-toolbar mb-2 mb-md-0" id="page-actions">
+        <div class="btn-group me-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="location.reload()">
+                <i class="bi bi-arrow-clockwise"></i> Refresh
+            </button>
+        </div>
     </div>
+</div>
 </div>
 
 <?php if ($success = getFlashMessage('success')): ?>
@@ -63,13 +69,13 @@
     <nav aria-label="Pagination">
         <ul class="pagination justify-content-center">
             <?php if ($page > 1): ?>
-                <li class="page-item"><a class="page-link" href="?page=<?= $page - 1 ?>">Previous</a></li>
+                <li class="page-item"><a class="page-link" href="?page=<?= $page - 1 ?>">Sebelumnya</a></li>
             <?php endif; ?>
             <?php for ($i = 1; $i <= $totalPages; $i++): ?>
                 <li class="page-item <?= $i == $page ? 'active' : '' ?>"><a class="page-link" href="?page=<?= $i ?>"><?= $i ?></a></li>
             <?php endfor; ?>
             <?php if ($page < $totalPages): ?>
-                <li class="page-item"><a class="page-link" href="?page=<?= $page + 1 ?>">Next</a></li>
+                <li class="page-item"><a class="page-link" href="?page=<?= $page + 1 ?>">Selanjutnya</a></li>
             <?php endif; ?>
         </ul>
     </nav>

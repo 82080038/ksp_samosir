@@ -4,12 +4,12 @@ require_once __DIR__ . '/BaseController.php';
 class ProdukController extends BaseController {
     public function index() {
         // $this->ensureLoginAndRole([.*]); // DISABLED for development
-        $this->render(__DIR__ . '/../views/produk/index.php');
+        $this->render('produk/index');
     }
 
     public function create() {
         // $this->ensureLoginAndRole([.*]); // DISABLED for development
-        $this->render(__DIR__ . '/../views/produk/create.php');
+        $this->render('produk/create');
     }
 
     public function store() {
@@ -20,7 +20,7 @@ class ProdukController extends BaseController {
 
     public function edit($id) {
         // $this->ensureLoginAndRole([.*]); // DISABLED for development
-        $this->render(__DIR__ . '/../views/produk/edit.php', ['id' => $id]);
+        $this->render('produk/edit', ['id' => $id]);
     }
 
     public function update($id) {

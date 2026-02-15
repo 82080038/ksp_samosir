@@ -1,3 +1,29 @@
+<?php
+// Use centralized dependency management
+require_once __DIR__ . '/../../../app/helpers/DependencyManager.php';
+
+// Initialize view with all dependencies
+$pageInfo = initView();
+$user = getCurrentUser();
+$role = $user['role'] ?? null;
+$stats = $stats ?? ['total_assets' => 0, 'total_asset_value' => 0, 'total_depreciation' => 0, 'net_book_value' => 0, 'maintenance_due' => 0];
+?>
+
+<!-- Page Header with Dynamic Title -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom" id="page-header">
+    <h1 class="h2 page-title" id="page-title" style="color: black;" data-page="asset">Manajemen Aset</h1>
+    <div class="btn-toolbar mb-2 mb-md-0" id="page-actions">
+        <div class="btn-group me-2">
+            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addAssetModal">
+                <i class="bi bi-plus-circle"></i> Tambah Asset
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-download"></i> Export
+            </button>
+        </div>
+    </div>
+</div>
+
 <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
         <h2>Dashboard Manajemen Asset</h2>
@@ -202,8 +228,12 @@
             <div class="card-body">
                 <?php
                 $current_month = date('Y-m');
-                $monthly_depreciation = fetchRow("SELECT COALESCE(SUM(depreciation_amount), 0) as total FROM asset_depreciation WHERE DATE_FORMAT(depreciation_date, '%Y-%m') = ?", [$current_month], 's')['total'];
-                $monthly_assets = fetchRow("SELECT COUNT(DISTINCT asset_id) as total FROM asset_depreciation WHERE DATE_FORMAT(depreciation_date, '%Y-%m') = ?", [$current_month], 's')['total'];
+                try {
+                    $monthly_depreciation = (fetchRow("SELECT COALESCE(SUM(depreciation_amount), 0) as total FROM asset_depreciation WHERE DATE_FORMAT(depreciation_date, '%Y-%m') = ?", [$current_month], 's') ?? [])['total'] ?? 0;
+                    $monthly_assets = (fetchRow("SELECT COUNT(DISTINCT asset_id) as total FROM asset_depreciation WHERE DATE_FORMAT(depreciation_date, '%Y-%m') = ?", [$current_month], 's') ?? [])['total'] ?? 0;
+                } catch (Exception $e) {
+                    $monthly_depreciation = $monthly_assets = 0;
+                }
                 ?>
                 <div class="row text-center">
                     <div class="col-md-4">

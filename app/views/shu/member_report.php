@@ -1,6 +1,49 @@
+<?php
+// Use centralized dependency management
+require_once __DIR__ . '/../../../app/helpers/DependencyManager.php';
+
+// Initialize view with all dependencies
+$pageInfo = initView();
+$user = getCurrentUser();
+$role = $user['role'] ?? null;
+?>
+
+
+</div>
+
+<!-- Page Header with Dynamic Title -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom" id="page-header">
+    <h1 class="h2 page-title" id="page-title" style="color: black;" data-page="shu-member-report">Laporan SHU Anggota</h1>
+    <div class="btn-toolbar mb-2 mb-md-0" id="page-actions">
+        <div class="btn-group me-2">
+                <a href="shu" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Kembali
+                </a>
+            </div>
+    </div>
+</div>
+
+
+<!-- Flash Messages -->
+<?php if ($error = getFlashMessage('error')): ?>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        <?= $error ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
+
+<?php if ($success = getFlashMessage('success')): ?>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-2"></i>
+        <?= $success ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
+
 <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
-        <h2>Detail SHU Anggota</h2>
+        
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="<?= base_url('shu') ?>">SHU</a></li>
@@ -17,7 +60,7 @@
 <!-- Member Info -->
 <div class="card mb-4">
     <div class="card-header">
-        <h5>Informasi Anggota</h5>
+        
     </div>
     <div class="card-body">
         <div class="row">
@@ -44,7 +87,7 @@
 <!-- SHU History -->
 <div class="card">
     <div class="card-header">
-        <h5>Riwayat SHU</h5>
+        
     </div>
     <div class="card-body">
         <?php if (empty($shu_history)): ?>
@@ -90,7 +133,7 @@
                 <div class="col-md-4">
                     <div class="card bg-light">
                         <div class="card-body text-center">
-                            <h6>Total SHU</h6>
+                            
                             <h4 class="text-success">
                                 Rp <?= formatCurrency(array_sum(array_column($shu_history, 'total_shu'))) ?>
                             </h4>
@@ -100,7 +143,7 @@
                 <div class="col-md-4">
                     <div class="card bg-light">
                         <div class="card-body text-center">
-                            <h6>SHU Sudah Dibayar</h6>
+                            
                             <h4 class="text-success">
                                 Rp <?= formatCurrency(array_sum(array_map(function($shu) {
                                     return $shu['status_pembayaran'] === 'lunas' ? $shu['total_shu'] : 0;
@@ -112,7 +155,7 @@
                 <div class="col-md-4">
                     <div class="card bg-light">
                         <div class="card-body text-center">
-                            <h6>SHU Pending</h6>
+                            
                             <h4 class="text-warning">
                                 Rp <?= formatCurrency(array_sum(array_map(function($shu) {
                                     return $shu['status_pembayaran'] !== 'lunas' ? $shu['total_shu'] : 0;
@@ -131,7 +174,7 @@
     <div class="col-md-6">
         <div class="card">
             <div class="card-header">
-                <h5>Informasi Simpanan</h5>
+                
             </div>
             <div class="card-body">
                 <?php
@@ -159,7 +202,7 @@
     <div class="col-md-6">
         <div class="card">
             <div class="card-header">
-                <h5>Informasi Pinjaman</h5>
+                
             </div>
             <div class="card-body">
                 <?php
@@ -184,3 +227,37 @@
         </div>
     </div>
 </div>
+
+
+</div>
+
+<!-- JavaScript for DOM Manipulation -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Page shu - member_report initialized');
+    
+    // Update page title dynamically
+    if (typeof updatePageTitle !== 'undefined') {
+        updatePageTitle('Laporan Anggota', 'shu-member_report');
+    }
+});
+
+// Global functions
+function saveShu() {
+    const form = document.querySelector('form');
+    if (form) {
+        form.dispatchEvent(new Event('submit'));
+    }
+}
+</script>
+
+<style>
+/* Page-specific styles */
+.page-title {
+    font-weight: 700;
+}
+
+.main-content {
+    min-height: 400px;
+}
+</style>

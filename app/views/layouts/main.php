@@ -1,357 +1,496 @@
+<?php
+// Use centralized dependency management
+require_once __DIR__ . '/../../../app/helpers/DependencyManager.php';
+require_once __DIR__ . '/../../../app/helpers/SidebarHelper.php';
+
+// Initialize view with all dependencies
+$pageInfo = initView();
+$user = getCurrentUser();
+$role = $user['role'] ?? null;
+?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title><?= APP_NAME ?></title>
-    <link rel="icon" href="data:,">
-
-    <!-- Bootstrap CSS - Optimized Loading -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
-          rel="stylesheet"
-          integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
-          crossorigin="anonymous"
-          onload="this.onload=null;this.rel='stylesheet'"
-          as="style">
-
-    <!-- Bootstrap Icons - Optimized Loading -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"
-          rel="stylesheet"
-          onload="this.onload=null;this.rel='stylesheet'"
-          as="style">
-
-    <!-- Custom CSS - Optimized -->
-    <link href="<?= base_url('public/assets/css/style-blue.min.css?v=' . filemtime(__DIR__ . '/../../public/assets/css/style-blue.css')) ?>"
-          rel="stylesheet"
-          as="style">
-
-    <!-- KSP Theme CSS - Custom Bootstrap Theme -->
-    <link href="<?= base_url('public/assets/css/ksp-theme.css?v=' . filemtime(__DIR__ . '/../../public/assets/css/ksp-theme.css')) ?>"
-          rel="stylesheet"
-          as="style">
-
-    <!-- Preload Critical Resources -->
-    <link rel="preload" href="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js" as="script">
-    <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" as="script">
-
-    <!-- DNS Prefetch for External Resources -->
-    <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
-    <link rel="dns-prefetch" href="//ajax.googleapis.com">
-    <link rel="dns-prefetch" href="//fonts.googleapis.com">
-
-    <!-- Critical CSS Inline -->
+    <?php setPageTitle($pageInfo['page']); ?>
+    <meta name="description" content="<?= $pageInfo['seo_title'] ?? $pageInfo['title'] ?>">
+    <meta name="keywords" content="koperasi, simpan pinjam, <?= strtolower($pageInfo['title']) ?>">
+    <meta name="author" content="KSP Samosir">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="<?= base_url('assets/css/ksp-ui.css') ?>" rel="stylesheet">
+    <link href="<?= base_url('assets/css/ksp-enhanced.css') ?>" rel="stylesheet">
     <style>
-        /* Critical above-the-fold styles */
-        .layout-body { padding-top: 0; }
-        .ksp-sidebar { overflow-y: auto; min-height: 100vh; }
-        .ksp-sidebar .nav-link {
-            padding: 10px 14px;
-            border-radius: 10px;
-            margin-bottom: 6px;
-            transition: all 0.15s ease;
+        /* ================================
+           GLOBAL LAYOUT SPACING RULES
+           ================================
+           - Navbar Height: 56px (fixed)
+           - Sidebar Width: 250px (expanded), 70px (collapsed)
+           - Main Content Top Padding: 76px (56px navbar + 20px breathing room)
+           - Main Content Left Margin: 250px (expanded), 70px (collapsed), 0px (mobile)
+        ================================ */
+        
+        /* Fixed Navbar - Base Reference */
+        .navbar {
+            height: 56px !important;
+            min-height: 56px !important;
         }
-        .ksp-sidebar .nav-link:hover { transform: translateX(2px); }
-
-        /* Loading states */
-        .loading { opacity: 0.6; pointer-events: none; }
-        .loading::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
+        
+        /* Sidebar Configuration */
+        .sidebar { 
+            position: fixed; 
+            top: 56px; /* Exactly at navbar bottom */
+            bottom: 0; 
+            left: 0; 
+            z-index: 100; 
+            padding: 0; 
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1); 
+            width: 250px; /* Standard sidebar width */
+            transition: all 0.3s ease;
+            background: #212529;
+        }
+        
+        .sidebar-sticky { 
+            position: relative; 
+            top: 0; 
+            height: calc(100vh - 56px); /* Full height minus navbar */
+            padding-top: 0.5rem; 
+            padding-bottom: 0.5rem;
+            padding-right: 0;
+            overflow-x: hidden; 
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+        /* Hide scrollbar but keep scrolling */
+        .sidebar-sticky::-webkit-scrollbar { width: 3px; }
+        .sidebar-sticky::-webkit-scrollbar-track { background: transparent; }
+        .sidebar-sticky::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+        .sidebar-sticky::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
+        
+        /* Main Content - Desktop Default */
+        .main-content { 
+            margin-left: 250px; /* Align with expanded sidebar */
+            padding: 76px 20px 20px 20px; /* 56px navbar + 20px breathing room */
+            transition: all 0.3s ease;
+            min-height: calc(100vh - 56px); /* Full viewport minus navbar */
+            background: #f8f9fa;
+            overflow-x: hidden; /* Never show horizontal scrollbar */
+            max-width: calc(100vw - 250px); /* Constrain to available width */
+        }
+        
+        /* Tablet Breakpoint (768px - 991px) */
+        @media (max-width: 991.98px) and (min-width: 768px) {
+            .sidebar { 
+                margin-left: -250px;
+                z-index: 1040;
+            }
+            
+            .sidebar.show { 
+                margin-left: 0;
+            }
+            
+            .main-content { 
+                margin-left: 0; /* Full width on tablet */
+                padding: 76px 15px 20px 15px; /* Reduced side padding for tablet */
+                min-height: calc(100vh - 56px);
+                max-width: 100vw;
+            }
+        }
+        
+        /* Mobile Breakpoint (< 768px) */
+        @media (max-width: 767.98px) {
+            .sidebar { 
+                margin-left: -250px;
+                z-index: 1040;
+            }
+            
+            .sidebar.show { 
+                margin-left: 0;
+            }
+            
+            .main-content { 
+                margin-left: 0; /* Full width on mobile */
+                padding: 76px 10px 20px 10px; /* Minimal side padding for mobile */
+                min-height: calc(100vh - 56px);
+                max-width: 100vw;
+            }
+        }
+        
+        /* Collapsed Sidebar State - All Screen Sizes */
+        .sidebar-collapsed .sidebar {
+            width: 70px !important; /* Collapsed sidebar width */
+        }
+        
+        .sidebar-collapsed .main-content {
+            margin-left: 70px; /* Align with collapsed sidebar */
+            padding: 76px 20px 20px 20px; /* Maintain consistent top padding */
+            min-height: calc(100vh - 56px);
+        }
+        
+        /* Collapsed Sidebar on Mobile/Tablet - Force Full Width */
+        @media (max-width: 991.98px) {
+            .sidebar-collapsed .sidebar {
+                width: 0 !important;
+                margin-left: -250px;
+            }
+            
+            .sidebar-collapsed .main-content {
+                margin-left: 0 !important;
+                padding: 76px 15px 20px 15px; /* Use tablet padding */
+            }
+        }
+        
+        @media (max-width: 767.98px) {
+            .sidebar-collapsed .main-content {
+                padding: 76px 10px 20px 10px; /* Use mobile padding */
+            }
+        }
+        
+        /* Sidebar Content Adjustments for Collapsed State */
+        .sidebar-collapsed .sidebar-text,
+        .sidebar-collapsed .sidebar-brand-text span:not(:first-child) {
+            display: none;
+        }
+        
+        /* Additional Navbar Styles */
+        .navbar { 
+            z-index: 1030;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .navbar-brand { 
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        /* Sidebar Navigation */
+        .sidebar .nav-link { 
+            font-weight: 500; 
+            color: rgba(255, 255, 255, 0.8); 
+            padding: 0.5rem 0.75rem;
+            margin: 0.125rem 0.5rem;
+            border-radius: 0.375rem;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            font-size: 0.875rem;
+        }
+        
+        .sidebar .nav-link:hover { 
+            color: #fff; 
+            background-color: rgba(255, 255, 255, 0.1); 
+            transform: translateX(2px);
+        }
+        
+        .sidebar .nav-link.active { 
+            color: #fff; 
+            background-color: rgba(13, 110, 253, 0.2); 
+            border-left: 3px solid #0d6efd;
+        }
+        
+        .sidebar .nav-link i {
             width: 20px;
-            height: 20px;
-            margin: -10px 0 0 -10px;
-            border: 2px solid #007bff;
-            border-top: 2px solid transparent;
-            border-radius: 50%;
+            text-align: center;
+            margin-right: 0.5rem;
+        }
+        
+        /* Remove gap between sidebar and content */
+        .sidebar {
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .main-content {
+            border-left: none; /* Remove any border that might create gap */
+        }
+        
+        /* Mobile Navigation */
+        .mobile-nav .offcanvas {
+            width: 280px;
+        }
+        
+        /* Toast Container */
+        .toast-container {
+            z-index: 1060;
+        }
+        
+        /* Animations */
+        .spin {
             animation: spin 1s linear infinite;
         }
-
+        
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-
-        /* Responsive optimizations */
-        @media (min-width: 768px) {
-            .ksp-sidebar-desktop {
-                position: fixed;
-                top: 56px;
-                bottom: 0;
-                width: 220px;
-                min-width: 220px;
-                z-index: 1000;
+        
+        /* Cards */
+        .ksp-stats-card { 
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out; 
+            border: none;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+        
+        .ksp-stats-card:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15); 
+        }
+        
+        /* Responsive Tables */
+        .table-responsive {
+            border-radius: 0.375rem;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+        
+        /* Form Enhancements */
+        .form-control:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+        }
+        
+        .form-floating > .form-control:focus ~ label,
+        .form-floating > .form-control:not(:placeholder-shown) ~ label {
+            color: #0d6efd;
+        }
+        
+        /* Loading States */
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1050;
+        }
+        
+        /* Print Styles */
+        @media print {
+            .sidebar, .navbar {
+                display: none !important;
             }
-            .ksp-content-wrap {
-                margin-left: 220px;
-                padding: 16px;
-                min-height: calc(100vh - 56px);
+            
+            .main-content {
+                margin-left: 0 !important;
+                padding-top: 0 !important;
             }
         }
-
-        @media (max-width: 767.98px) {
-            .ksp-sidebar { position: relative; }
-            .navbar-toggler { order: -1; }
-        }
-
-        /* Performance optimizations */
-        * { box-sizing: border-box; }
-        img { max-width: 100%; height: auto; }
-        .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     </style>
 </head>
 <body>
-<!-- Loading Screen -->
-<div id="loading-screen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 9999; display: flex; align-items: center; justify-content: center;">
-    <div class="text-center">
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
+<!-- Mobile Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <div class="container-fluid">
+        <!-- Mobile Toggle Button -->
+        <button class="navbar-toggler d-lg-none" type="button" data-nav-toggle="mobile" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <!-- Desktop Toggle Button -->
+        <button class="btn btn-outline-light btn-sm d-none d-lg-inline-block me-3" 
+                data-nav-toggle="desktop" type="button" aria-label="Toggle sidebar">
+            <i class="bi bi-list"></i>
+        </button>
+        
+        <!-- Brand -->
+        <a class="navbar-brand sidebar-brand-text" href="<?= base_url('dashboard') ?>">
+            <i class="bi bi-building me-2"></i>
+            <span class="sidebar-text">KSP Samosir</span>
+        </a>
+        
+        <!-- User Menu (Right side) -->
+        <div class="navbar-nav ms-auto">
+            <!-- Notifications -->
+            <div class="nav-item dropdown">
+                <a class="nav-link text-white position-relative" href="#" id="notificationDropdown" 
+                   role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-bell"></i>
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                        3
+                    </span>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><h6 class="dropdown-header">Notifikasi</h6></li>
+                    <li><a class="dropdown-item" href="#">
+                        <i class="bi bi-person-plus text-success me-2"></i>
+                        Anggota baru terdaftar
+                        <small class="text-muted d-block">5 menit yang lalu</small>
+                    </a></li>
+                    <li><a class="dropdown-item" href="#">
+                        <i class="bi bi-cash-stack text-info me-2"></i>
+                        Simpanan baru ditambahkan
+                        <small class="text-muted d-block">1 jam yang lalu</small>
+                    </a></li>
+                    <li><a class="dropdown-item" href="#">
+                        <i class="bi bi-exclamation-triangle text-warning me-2"></i>
+                        Pinjaman perlu persetujuan
+                        <small class="text-muted d-block">2 jam yang lalu</small>
+                    </a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item text-center" href="<?= base_url('notifications') ?>">
+                        Lihat semua notifikasi
+                    </a></li>
+                </ul>
+            </div>
+            
+            <!-- User Dropdown -->
+            <div class="nav-item dropdown">
+                <a class="nav-link text-white dropdown-toggle d-flex align-items-center" 
+                   href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" 
+                   aria-expanded="false">
+                    <i class="bi bi-person-circle me-2"></i>
+                    <span class="d-none d-md-inline-block">
+                        <?= $user['full_name'] ?? 'Pengguna' ?>
+                    </span>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><h6 class="dropdown-header">
+                        <i class="bi bi-shield-check me-2"></i>
+                        <?= ucfirst($role ?? '-') ?>
+                    </h6></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="<?= base_url('profile') ?>">
+                        <i class="bi bi-person me-2"></i>Profil Saya
+                    </a></li>
+                    <li><a class="dropdown-item" href="<?= base_url('settings') ?>">
+                        <i class="bi bi-gear me-2"></i>Pengaturan
+                    </a></li>
+                    <li><a class="dropdown-item" href="<?= base_url('help') ?>">
+                        <i class="bi bi-question-circle me-2"></i>Bantuan
+                    </a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item text-danger" href="<?= base_url('logout') ?>">
+                        <i class="bi bi-box-arrow-right me-2"></i>Keluar
+                    </a></li>
+                </ul>
+            </div>
         </div>
-        <div class="mt-2">Loading <?= APP_NAME ?>...</div>
     </div>
-</div>
+</nav>
 
-<header class="container-fluid sticky-top bg-dark">
+<div class="container-fluid">
     <div class="row">
-        <nav class="navbar navbar-dark bg-dark d-flex justify-content-between">
-            <a class="navbar-brand" href="<?= base_url('dashboard') ?>">
-                <i class="bi bi-bank me-2"></i><?= APP_NAME ?>
-            </a>
-            <button class="navbar-toggler d-md-none" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-        </nav>
-    </div>
-</header>
-
-<main class="container-fluid layout-body">
-    <div class="row flex-nowrap align-items-start">
-        <!-- Sidebar (mobile collapse, desktop sticky) -->
-        <nav id="sidebarMenu" class="col-12 col-md-3 col-lg-2 bg-dark text-white collapse d-md-block ksp-sidebar ksp-sidebar-desktop px-3 py-3">
-            <div>
-                <div class="mb-4">
-                    <div class="fw-bold">
-                        <i class="bi bi-bank me-2"></i><?= APP_NAME ?>
-                    </div>
-                    <small class="text-muted">
-                        <i class="bi bi-person-circle me-1"></i><?= $user['full_name'] ?? 'Pengguna' ?>
-                        <span class="badge bg-primary ms-1"><?= $role ?? '-' ?></span>
-                    </small>
+        <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse text-white">
+            <div class="position-sticky px-2 sidebar-sticky">
+                <div class="mb-2 mt-1 px-2 py-1">
+                    <div class="fw-bold sidebar-brand-text" style="font-size:0.85rem">KSP Samosir</div>
+                    <small class="sidebar-text text-white-50" style="font-size:0.7rem"><?= $user['full_name'] ?? 'Pengguna' ?> (<?= $role ?? '-' ?>)</small>
                 </div>
                 <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a class="nav-link text-white" href="<?= base_url('dashboard') ?>">
-                            <i class="bi bi-speedometer2 me-2"></i>Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-white" href="<?= base_url('anggota') ?>">
-                            <i class="bi bi-people me-2"></i>Anggota
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-white" href="<?= base_url('simpanan') ?>">
-                            <i class="bi bi-piggy-bank me-2"></i>Simpanan
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-white" href="<?= base_url('pinjaman') ?>">
-                            <i class="bi bi-cash-stack me-2"></i>Pinjaman
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-white" href="<?= base_url('produk') ?>">
-                            <i class="bi bi-box me-2"></i>Produk
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-white" href="<?= base_url('penjualan') ?>">
-                            <i class="bi bi-cart3 me-2"></i>Penjualan
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-white" href="<?= base_url('laporan') ?>">
-                            <i class="bi bi-file-earmark-text me-2"></i>Laporan
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-white" href="<?= base_url('settings') ?>">
-                            <i class="bi bi-gear me-2"></i>Pengaturan
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-white" href="<?= base_url('logs') ?>">
-                            <i class="bi bi-journal-text me-2"></i>Logs
-                        </a>
-                    </li>
-                    <li class="nav-item">
+                    <!-- Dynamic sidebar from database -->
+                    <?= renderSidebarMenus() ?>
+
+                    <!-- Logout (All Roles) -->
+                    <li class="nav-item mt-3">
                         <a class="nav-link text-danger" href="<?= base_url('logout') ?>">
-                            <i class="bi bi-box-arrow-right me-2"></i>Logout
+                            <i class="bi bi-box-arrow-right me-2"></i>Keluar
                         </a>
                     </li>
                 </ul>
             </div>
         </nav>
 
-        <!-- Content -->
-        <section class="col py-3 px-3 ksp-content ksp-content-wrap">
-            <?= $content ?? '' ?>
-        </section>
-    </div>
-</main>
-
-<footer class="container-fluid ksp-footer text-center text-muted small py-3">
-    <div class="container">
-        <div class="row">
-            <div class="col-md-6 text-start">
-                © <?= date('Y') ?> <?= APP_NAME ?> - Optimized for Performance
+        <main class="main-content" id="main-content">
+            <!-- Loading Screen -->
+            <div id="loading-screen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 9999; display: flex; align-items: center; justify-content: center;">
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <div class="mt-2">Loading KSP Samosir...</div>
+                </div>
             </div>
-            <div class="col-md-6 text-end">
-                <small>v<?= APP_VERSION ?? '1.0' ?> - Bootstrap 5.3.2</small>
-            </div>
-        </div>
-    </div>
-</footer>
 
-<!-- Optimized JavaScript Loading -->
+            <?= $content ?? '<div class="alert alert-warning">Content not loaded</div>' ?>
+        </main>
+    </div>
+</div>
+
+<!-- jQuery -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js" crossorigin="anonymous"></script>
+
+<!-- Bootstrap 5.3 Bundle (includes Popper) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js" crossorigin="anonymous" defer></script>
+
+<!-- KSP Unified UI Library (modals, toasts, alerts, tables, forms, AJAX) -->
+<script src="<?= base_url('assets/js/ksp-ui.js') ?>"></script>
+
+<?php 
+// Include JavaScript helpers
+if (function_exists('generateJsHelpers')) echo generateJsHelpers(); 
+?>
+
+<?php if (file_exists(APP_PATH . '/templates/modals.php')) include APP_PATH . '/templates/modals.php'; ?>
+
+<!-- Sidebar & App Init -->
 <script>
-// Immediately hide loading screen
 document.getElementById('loading-screen').style.display = 'none';
+$(function() {
+    var sb = document.getElementById('sidebarMenu');
+    if (!sb) return;
 
-// Performance monitoring
-window.addEventListener('load', function() {
-    // Log page load time
-    if (window.performance) {
-        const loadTime = performance.now();
-        console.log('Page loaded in', loadTime.toFixed(2), 'ms');
-    }
-});
-
-// Service Worker Registration (for caching)
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function() {
-        navigator.serviceWorker.register('/ksp_samosir/sw.js')
-            .then(function(registration) {
-                console.log('SW registered: ', registration);
-            })
-            .catch(function(registrationError) {
-                console.log('SW registration failed: ', registrationError);
-            });
-    });
-}
-</script>
-
-<!-- jQuery - Optimized Loading -->
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"
-        crossorigin="anonymous"
-        defer></script>
-
-<!-- Bootstrap JS Bundle - Optimized Loading -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
-        crossorigin="anonymous"
-        defer></script>
-
-<!-- Custom AJAX Handler - Optimized -->
-<script src="<?= base_url('public/assets/js/ksp-ajax.min.js?v=' . filemtime(__DIR__ . '/../../public/assets/js/ksp-ajax.js')) ?>" defer></script>
-
-<!-- KSP Components Library -->
-<script src="<?= base_url('public/assets/js/ksp-components.js?v=' . filemtime(__DIR__ . '/../../public/assets/js/ksp-components.js')) ?>" defer></script>
-
-<!-- Member Manager Module -->
-<script src="<?= base_url('public/assets/js/member-manager.js?v=' . filemtime(__DIR__ . '/../../public/assets/js/member-manager.js')) ?>" defer></script>
-
-<!-- Main Application Script -->
-<script defer>
-// Enhanced Bootstrap sidebar functionality
-document.addEventListener('DOMContentLoaded', function() {
-    const sidebarMenu = document.getElementById('sidebarMenu');
-    const toggler = document.querySelector('[data-bs-target="#sidebarMenu"]');
-
-    // Enhanced sidebar toggle with smooth animations
-    if (sidebarMenu) {
-        sidebarMenu.querySelectorAll('a.nav-link').forEach(function(link) {
-            link.addEventListener('click', function() {
-                // Close mobile menu after navigation
-                if (window.innerWidth < 768 && sidebarMenu.classList.contains('show')) {
-                    const collapse = bootstrap.Collapse.getOrCreateInstance(sidebarMenu);
-                    collapse.hide();
-                }
-            });
-        });
-
-        // Keyboard navigation support
-        sidebarMenu.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                const collapse = bootstrap.Collapse.getOrCreateInstance(sidebarMenu);
-                collapse.hide();
-            }
-        });
-    }
-
-    // Enhanced responsive behavior
-    window.addEventListener('resize', function() {
-        if (window.innerWidth >= 768 && sidebarMenu) {
-            // Ensure desktop sidebar is visible
-            sidebarMenu.classList.add('show');
+    // Close mobile sidebar on nav click
+    $(sb).find('a.nav-link').on('click', function() {
+        if (window.innerWidth < 768 && sb.classList.contains('show')) {
+            bootstrap.Collapse.getOrCreateInstance(sb).hide();
         }
     });
 
-    // Touch gesture support for mobile
-    let touchStartX = 0;
-    let touchEndX = 0;
-
-    document.addEventListener('touchstart', function(e) {
-        touchStartX = e.changedTouches[0].screenX;
+    // Escape key closes sidebar
+    $(sb).on('keydown', function(e) {
+        if (e.key === 'Escape') bootstrap.Collapse.getOrCreateInstance(sb).hide();
     });
 
+    // Ensure desktop sidebar visible on resize
+    $(window).on('resize', function() {
+        if (window.innerWidth >= 768) sb.classList.add('show');
+    });
+
+    // Touch swipe for mobile sidebar
+    var sx = 0;
+    document.addEventListener('touchstart', function(e) { sx = e.changedTouches[0].screenX; }, {passive: true});
     document.addEventListener('touchend', function(e) {
-        touchEndX = e.changedTouches[0].screenX;
-        handleSwipe();
-    });
-
-    function handleSwipe() {
-        const swipeThreshold = 50;
-        if (touchEndX - touchStartX > swipeThreshold && window.innerWidth < 768) {
-            // Swipe right - show menu
-            if (sidebarMenu) {
-                const collapse = bootstrap.Collapse.getOrCreateInstance(sidebarMenu);
-                collapse.show();
-            }
-        } else if (touchStartX - touchEndX > swipeThreshold && window.innerWidth < 768) {
-            // Swipe left - hide menu
-            if (sidebarMenu) {
-                const collapse = bootstrap.Collapse.getOrCreateInstance(sidebarMenu);
-                collapse.hide();
-            }
+        var d = e.changedTouches[0].screenX - sx;
+        if (Math.abs(d) > 50 && window.innerWidth < 768) {
+            bootstrap.Collapse.getOrCreateInstance(sb)[d > 0 ? 'show' : 'hide']();
         }
+    }, {passive: true});
+
+    // === Scroll active nav-link to center of sidebar ===
+    var sticky = sb.querySelector('.sidebar-sticky');
+    var active = sb.querySelector('.nav-link.active');
+    if (sticky && active) {
+        var stickyH = sticky.clientHeight;
+        var activeTop = active.offsetTop;
+        var activeH = active.offsetHeight;
+        // Scroll so that active item is vertically centered
+        var scrollTo = activeTop - (stickyH / 2) + (activeH / 2);
+        // Clamp: don't scroll past top or bottom
+        var maxScroll = sticky.scrollHeight - stickyH;
+        scrollTo = Math.max(0, Math.min(scrollTo, maxScroll));
+        sticky.scrollTop = scrollTo;
     }
 
-    // Performance monitoring
-    window.KSP = window.KSP || {};
-    window.KSP.performance = {
-        mark: function(name) {
-            if (window.performance && window.performance.mark) {
-                window.performance.mark(name);
-            }
-        },
-        measure: function(name, start, end) {
-            if (window.performance && window.performance.measure) {
-                window.performance.measure(name, start, end);
-                const measure = window.performance.getEntriesByName(name)[0];
-                console.log(`${name}: ${measure.duration.toFixed(2)}ms`);
-            }
-        }
-    };
-
-    // Mark page ready
-    window.KSP.performance.mark('page-ready');
+    // Clear stale service workers
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(r) { r.forEach(function(sw) { sw.unregister(); }); });
+    }
 });
 </script>
 
-<?php include __DIR__ . '/../templates/modals.php'; ?>
 </body>
 </html>

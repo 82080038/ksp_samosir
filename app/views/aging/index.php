@@ -1,7 +1,28 @@
-<div class="d-flex justify-content-between align-items-center mb-3">
+<?php
+// Use centralized dependency management
+require_once __DIR__ . '/../../../app/helpers/DependencyManager.php';
+
+// Initialize view with all dependencies
+$pageInfo = initView();
+$user = getCurrentUser();
+$role = $user['role'] ?? null;
+?>
+
+<!-- Page Header with Dynamic Title -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom" id="page-header">
     <div>
-        <h2>Dashboard Aging Reports</h2>
+        <h1 class="h2 page-title" id="page-title" style="color: black;" data-page="aging">Dashboard Laporan Aging</h1>
         <p class="text-muted">Analisis umur piutang dan hutang</p>
+    </div>
+    <div class="btn-toolbar mb-2 mb-md-0" id="page-actions">
+        <div class="btn-group me-2">
+            <button type="button" class="btn btn-sm btn-primary" onclick="exportAgingReport()">
+                <i class="bi bi-download"></i> Export
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="refreshAging()">
+                <i class="bi bi-arrow-clockwise"></i> Refresh
+            </button>
+        </div>
     </div>
 </div>
 
@@ -230,7 +251,7 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-6">
-                        <h6>Piutang (Accounts Receivable)</h6>
+                        <h6>Piutang</h6>
                         <div class="progress mb-2">
                             <div class="progress-bar bg-success" style="width: <?= $receivables_aging['aging_totals']['total'] > 0 ? ($receivables_aging['aging_totals']['current'] / $receivables_aging['aging_totals']['total'] * 100) : 0 ?>%"></div>
                             <div class="progress-bar bg-warning" style="width: <?= $receivables_aging['aging_totals']['total'] > 0 ? ($receivables_aging['aging_totals']['1_30_days'] / $receivables_aging['aging_totals']['total'] * 100) : 0 ?>%"></div>
@@ -241,7 +262,7 @@
                         </small>
                     </div>
                     <div class="col-md-6">
-                        <h6>Hutang (Accounts Payable)</h6>
+                        <h6>Hutang</h6>
                         <div class="progress mb-2">
                             <div class="progress-bar bg-success" style="width: <?= $payables_aging['aging_totals']['total'] > 0 ? ($payables_aging['aging_totals']['current'] / $payables_aging['aging_totals']['total'] * 100) : 0 ?>%"></div>
                             <div class="progress-bar bg-warning" style="width: <?= $payables_aging['aging_totals']['total'] > 0 ? ($payables_aging['aging_totals']['1_30_days'] / $payables_aging['aging_totals']['total'] * 100) : 0 ?>%"></div>
@@ -263,8 +284,8 @@
                         $current_ratio = $receivables_total > 0 ? ($receivables_aging['aging_totals']['current'] / $receivables_total * 100) : 0;
                         $overdue_ratio = $receivables_total > 0 ? ($receivables_aging['total_overdue'] / $receivables_total * 100) : 0;
                         ?>
-                        <p>Current: <strong><?= number_format($current_ratio, 1) ?>%</strong></p>
-                        <p>Overdue: <strong><?= number_format($overdue_ratio, 1) ?>%</strong></p>
+                        <p>Current: <strong><?= formatPersentase($current_ratio) ?></strong></p>
+                        <p>Overdue: <strong><?= formatPersentase($overdue_ratio) ?></strong></p>
                     </div>
                     <div class="col-md-6">
                         <h6>Likuiditas Hutang</h6>
@@ -273,8 +294,8 @@
                         $current_ratio = $payables_total > 0 ? ($payables_aging['aging_totals']['current'] / $payables_total * 100) : 0;
                         $overdue_ratio = $payables_total > 0 ? ($payables_aging['total_overdue'] / $payables_total * 100) : 0;
                         ?>
-                        <p>Current: <strong><?= number_format($current_ratio, 1) ?>%</strong></p>
-                        <p>Overdue: <strong><?= number_format($overdue_ratio, 1) ?>%</strong></p>
+                        <p>Current: <strong><?= formatPersentase($current_ratio) ?></strong></p>
+                        <p>Overdue: <strong><?= formatPersentase($overdue_ratio) ?></strong></p>
                     </div>
                 </div>
             </div>

@@ -4,15 +4,25 @@ require_once __DIR__ . '/BaseController.php';
 class PinjamanController extends BaseController {
     public function index() {
         // // $this->ensureLoginAndRole([.*]); // DISABLED for development // DISABLED for development
+        
+        // Calculate statistics
+        $stats = [
+            'total_pinjaman' => (fetchRow("SELECT COUNT(*) as count FROM pinjaman") ?? [])['count'] ?? 0,
+            'total_nilai_pinjaman' => (fetchRow("SELECT COALESCE(SUM(jumlah_pinjaman), 0) as total FROM pinjaman WHERE status IN ('disetujui', 'dicairkan')") ?? [])['total'] ?? 0,
+            'pinjaman_aktif' => (fetchRow("SELECT COUNT(*) as count FROM pinjaman WHERE status IN ('disetujui', 'dicairkan')") ?? [])['count'] ?? 0,
+            'pinjaman_pending' => (fetchRow("SELECT COUNT(*) as count FROM pinjaman WHERE status = 'pending'") ?? [])['count'] ?? 0,
+            'pinjaman_bulan_ini' => (fetchRow("SELECT COALESCE(SUM(jumlah_pinjaman), 0) as total FROM pinjaman WHERE status IN ('disetujui', 'dicairkan') AND MONTH(tanggal_pengajuan) = MONTH(CURRENT_DATE) AND YEAR(tanggal_pengajuan) = YEAR(CURRENT_DATE)") ?? [])['total'] ?? 0
+        ];
+        
         $pinjaman = fetchAll("SELECT p.id, p.no_pinjaman, p.jumlah_pinjaman, p.status, p.tanggal_pengajuan, a.nama_lengkap AS anggota FROM pinjaman p LEFT JOIN anggota a ON p.anggota_id=a.id ORDER BY p.created_at DESC");
-        $this->render(__DIR__ . '/../views/pinjaman/index.php', ['pinjaman' => $pinjaman]);
+        $this->render('pinjaman/index', ['pinjaman' => $pinjaman, 'stats' => $stats]);
     }
 
     public function create() {
         // // $this->ensureLoginAndRole([.*]); // DISABLED for development // DISABLED for development
         $anggota = fetchAll("SELECT id, nama_lengkap FROM anggota WHERE status='aktif' ORDER BY nama_lengkap");
         $jenis = fetchAll("SELECT id, nama_pinjaman FROM jenis_pinjaman WHERE is_active=1 ORDER BY nama_pinjaman");
-        $this->render(__DIR__ . '/../views/pinjaman/create.php', ['anggota' => $anggota, 'jenis' => $jenis]);
+        $this->render('pinjaman/create', ['anggota' => $anggota, 'jenis' => $jenis]);
     }
 
     public function store() {
@@ -93,7 +103,7 @@ class PinjamanController extends BaseController {
         }
         $anggota = fetchAll("SELECT id, nama_lengkap FROM anggota WHERE status='aktif' ORDER BY nama_lengkap");
         $jenis = fetchAll("SELECT id, nama_pinjaman FROM jenis_pinjaman WHERE is_active=1 ORDER BY nama_pinjaman");
-        $this->render(__DIR__ . '/../views/pinjaman/edit.php', ['pinjaman' => $row, 'anggota' => $anggota, 'jenis' => $jenis]);
+        $this->render('pinjaman/edit', ['pinjaman' => $row, 'anggota' => $anggota, 'jenis' => $jenis]);
     }
 
     public function update($id) {
@@ -167,7 +177,7 @@ class PinjamanController extends BaseController {
 
     public function angsuran() {
         // $this->ensureLoginAndRole([.*]); // DISABLED for development
-        $this->render(__DIR__ . '/../views/pinjaman/angsuran.php');
+        $this->render('pinjaman/angsuran');
     }
 
     private function collectInput() {

@@ -1,3 +1,29 @@
+<?php
+// Use centralized dependency management
+require_once __DIR__ . '/../../../app/helpers/DependencyManager.php';
+
+// Initialize view with all dependencies
+$pageInfo = initView();
+$user = getCurrentUser();
+$role = $user['role'] ?? null;
+$stats = $stats ?? ['total_tickets' => 0, 'open_tickets' => 0, 'pending_returns' => 0, 'processed_returns_month' => 0];
+?>
+
+<!-- Page Header with Dynamic Title -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom" id="page-header">
+    <h1 class="h2 page-title" id="page-title" style="color: black;" data-page="customer-service">Customer Service</h1>
+    <div class="btn-toolbar mb-2 mb-md-0" id="page-actions">
+        <div class="btn-group me-2">
+            <a href="<?= base_url('customer_service/create_ticket') ?>" class="btn btn-sm btn-primary">
+                <i class="bi bi-plus-circle"></i> Tiket Baru
+            </a>
+            <a href="<?= base_url('customer_service/create_return') ?>" class="btn btn-sm btn-success">
+                <i class="bi bi-arrow-clockwise"></i> Return Baru
+            </a>
+        </div>
+    </div>
+</div>
+
 <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
         <h2>Dashboard Customer Service</h2>

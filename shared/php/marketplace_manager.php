@@ -106,11 +106,11 @@ class MarketplaceManager {
         ", array_merge($params, [$perPage, $offset]), str_repeat('s', count($params)) . 'ii');
 
         // Get total count for pagination
-        $totalCount = fetchRow("
+        $totalCount = (fetchRow("
             SELECT COUNT(*) as total
             FROM marketplace_products mp
             WHERE {$whereClause}
-        ", $params, str_repeat('s', count($params)))['total'];
+        ", $params, str_repeat('s', count($params))) ?? [])['total'] ?? 0;
 
         return [
             'products' => $products,
@@ -406,7 +406,7 @@ class MarketplaceManager {
                 WHERE mp.featured = TRUE AND mp.status = 'active'
                 ORDER BY mp.created_at DESC
                 LIMIT ?
-            ", [$limit], 'i');
+            ", [$limit], 'i') ?? [];
         }
 
         // Get categories user has purchased from
@@ -425,17 +425,17 @@ class MarketplaceManager {
             AND mp.status = 'active'
             ORDER BY mp.view_count DESC, mp.created_at DESC
             LIMIT ?
-        ", $params, str_repeat('i', count($params)));
+        ", $params, str_repeat('i', count($params))) ?? [];
     }
 
     // Private helper methods
     private function getMarketplaceStats() {
         return [
-            'total_products' => fetchRow("SELECT COUNT(*) as count FROM marketplace_products WHERE status = 'active'")['count'],
-            'total_transactions' => fetchRow("SELECT COUNT(*) as count FROM marketplace_transactions WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)")['count'],
-            'total_revenue' => fetchRow("SELECT COALESCE(SUM(total_amount), 0) as revenue FROM marketplace_transactions WHERE payment_status = 'paid' AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)")['revenue'],
-            'active_sellers' => fetchRow("SELECT COUNT(DISTINCT seller_id) as sellers FROM marketplace_products WHERE status = 'active' AND seller_type = 'member'")['sellers'],
-            'average_rating' => fetchRow("SELECT COALESCE(AVG(rating), 0) as avg_rating FROM marketplace_reviews WHERE status = 'active'")['avg_rating']
+            'total_products' => (fetchRow("SELECT COUNT(*) as count FROM marketplace_products WHERE status = 'active'") ?? [])['count'] ?? 0,
+            'total_transactions' => (fetchRow("SELECT COUNT(*) as count FROM marketplace_transactions WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)") ?? [])['count'] ?? 0,
+            'total_revenue' => (fetchRow("SELECT COALESCE(SUM(total_amount), 0) as revenue FROM marketplace_transactions WHERE payment_status = 'paid' AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)") ?? [])['revenue'] ?? 0,
+            'active_sellers' => (fetchRow("SELECT COUNT(DISTINCT seller_id) as sellers FROM marketplace_products WHERE status = 'active' AND seller_type = 'member'") ?? [])['sellers'] ?? 0,
+            'average_rating' => (fetchRow("SELECT COALESCE(AVG(rating), 0) as avg_rating FROM marketplace_reviews WHERE status = 'active'") ?? [])['avg_rating'] ?? null
         ];
     }
 
@@ -447,7 +447,7 @@ class MarketplaceManager {
             WHERE mp.featured = TRUE AND mp.status = 'active'
             ORDER BY mp.created_at DESC
             LIMIT 8
-        ", [], '');
+        ", [], '') ?? [];
     }
 
     private function getRecentTransactions() {
@@ -458,7 +458,7 @@ class MarketplaceManager {
             JOIN anggota a ON mt.buyer_id = a.id
             ORDER BY mt.created_at DESC
             LIMIT 10
-        ", [], '');
+        ", [], '') ?? [];
     }
 
     private function getTopSellers() {
@@ -480,7 +480,7 @@ class MarketplaceManager {
             GROUP BY mp.seller_id, mp.seller_type, seller_name
             ORDER BY total_revenue DESC
             LIMIT 10
-        ", [], '');
+        ", [], '') ?? [];
     }
 
     private function getCategoryPerformance() {
@@ -495,14 +495,14 @@ class MarketplaceManager {
             LEFT JOIN marketplace_transactions mt ON mp.id = mt.product_id AND mt.status = 'delivered'
             GROUP BY mc.id, mc.name
             ORDER BY revenue DESC
-        ", [], '');
+        ", [], '') ?? [];
     }
 
     private function getLoyaltyProgramStats() {
         return [
-            'total_members' => fetchRow("SELECT COUNT(*) as count FROM loyalty_program WHERE status = 'active'")['count'],
-            'total_points_issued' => fetchRow("SELECT COALESCE(SUM(points), 0) as points FROM loyalty_transactions WHERE transaction_type = 'earned'")['points'],
-            'total_points_redeemed' => fetchRow("SELECT COALESCE(SUM(points), 0) as points FROM loyalty_transactions WHERE transaction_type = 'redeemed'")['points'],
+            'total_members' => (fetchRow("SELECT COUNT(*) as count FROM loyalty_program WHERE status = 'active'") ?? [])['count'] ?? 0,
+            'total_points_issued' => (fetchRow("SELECT COALESCE(SUM(points), 0) as points FROM loyalty_transactions WHERE transaction_type = 'earned'") ?? [])['points'] ?? 0,
+            'total_points_redeemed' => (fetchRow("SELECT COALESCE(SUM(points), 0) as points FROM loyalty_transactions WHERE transaction_type = 'redeemed'") ?? [])['points'] ?? 0,
             'redemption_rate' => 0 // Calculate based on issued vs redeemed
         ];
     }

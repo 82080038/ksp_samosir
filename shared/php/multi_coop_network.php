@@ -592,12 +592,12 @@ class MultiCooperativeNetwork {
     // Dashboard data methods
     private function getNetworkStats() {
         return [
-            'total_cooperatives' => fetchRow("SELECT COUNT(*) as count FROM cooperative_network WHERE status = 'active'", [], '')['count'],
-            'active_trades' => fetchRow("SELECT COUNT(*) as count FROM inter_coop_trades WHERE trade_status IN ('agreed', 'in_progress')", [], '')['count'],
-            'shared_services_subscribers' => fetchRow("SELECT COUNT(*) as count FROM service_subscriptions WHERE status = 'active'", [], '')['count'],
-            'international_partnerships' => fetchRow("SELECT COUNT(*) as count FROM international_partnerships WHERE status = 'active'", [], '')['count'],
-            'cross_border_transactions' => fetchRow("SELECT COUNT(*) as count FROM cross_border_payments WHERE status = 'completed'", [], '')['count'],
-            'knowledge_content' => fetchRow("SELECT COUNT(*) as count FROM knowledge_base WHERE access_level != 'premium'", [], '')['count']
+            'total_cooperatives' => (fetchRow("SELECT COUNT(*) as count FROM cooperative_network WHERE status = 'active'", [], '') ?? [])['count'] ?? 0,
+            'active_trades' => (fetchRow("SELECT COUNT(*) as count FROM inter_coop_trades WHERE trade_status IN ('agreed', 'in_progress')", [], '') ?? [])['count'] ?? 0,
+            'shared_services_subscribers' => (fetchRow("SELECT COUNT(*) as count FROM service_subscriptions WHERE status = 'active'", [], '') ?? [])['count'] ?? 0,
+            'international_partnerships' => (fetchRow("SELECT COUNT(*) as count FROM international_partnerships WHERE status = 'active'", [], '') ?? [])['count'] ?? 0,
+            'cross_border_transactions' => (fetchRow("SELECT COUNT(*) as count FROM cross_border_payments WHERE status = 'completed'", [], '') ?? [])['count'] ?? 0,
+            'knowledge_content' => (fetchRow("SELECT COUNT(*) as count FROM knowledge_base WHERE access_level != 'premium'", [], '') ?? [])['count'] ?? 0
         ];
     }
 
@@ -610,7 +610,7 @@ class MultiCooperativeNetwork {
             WHERE it.trade_status IN ('agreed', 'in_progress')
             ORDER BY it.created_at DESC
             LIMIT 5
-        ", [], '');
+        ", [], '') ?? [];
     }
 
     private function getSharedServicesUsage() {
@@ -622,7 +622,7 @@ class MultiCooperativeNetwork {
             GROUP BY ss.id, ss.service_name, ss.service_category
             ORDER BY subscribers DESC
             LIMIT 5
-        ", [], '');
+        ", [], '') ?? [];
     }
 
     private function getInternationalPartnershipsStatus() {
@@ -632,12 +632,12 @@ class MultiCooperativeNetwork {
             WHERE status IN ('active', 'negotiating')
             ORDER BY created_at DESC
             LIMIT 5
-        ", [], '');
+        ", [], '') ?? [];
     }
 
     private function getKnowledgeSharingStats() {
         return [
-            'total_content' => fetchRow("SELECT COUNT(*) as count FROM knowledge_base", [], '')['count'],
+            'total_content' => (fetchRow("SELECT COUNT(*) as count FROM knowledge_base", [], '') ?? [])['count'] ?? 0,
             'popular_categories' => fetchAll("
                 SELECT category, COUNT(*) as count
                 FROM knowledge_base
@@ -658,8 +658,8 @@ class MultiCooperativeNetwork {
 
     private function getCrossBorderPaymentStats() {
         return [
-            'total_transactions' => fetchRow("SELECT COUNT(*) as count FROM cross_border_payments", [], '')['count'],
-            'total_volume' => fetchRow("SELECT SUM(amount) as volume FROM cross_border_payments WHERE status = 'completed'", [], '')['volume'],
+            'total_transactions' => (fetchRow("SELECT COUNT(*) as count FROM cross_border_payments", [], '') ?? [])['count'] ?? 0,
+            'total_volume' => (fetchRow("SELECT SUM(amount) as volume FROM cross_border_payments WHERE status = 'completed'", [], '') ?? [])['volume'] ?? 0,
             'success_rate' => $this->calculatePaymentSuccessRate(),
             'popular_routes' => fetchAll("
                 SELECT CONCAT(sender_country, ' → ', receiver_country) as route, COUNT(*) as transactions
@@ -675,22 +675,22 @@ class MultiCooperativeNetwork {
     private function getNetworkComplianceStatus() {
         return [
             'overall_compliance' => 92.5,
-            'governance_rules' => fetchRow("SELECT COUNT(*) as count FROM network_governance WHERE status = 'active'", [], '')['count'],
+            'governance_rules' => (fetchRow("SELECT COUNT(*) as count FROM network_governance WHERE status = 'active'", [], '') ?? [])['count'] ?? 0,
             'compliance_rate' => $this->calculateComplianceRate(),
-            'pending_actions' => fetchRow("SELECT COUNT(*) as count FROM compliance_monitoring WHERE action_status = 'pending'", [], '')['count']
+            'pending_actions' => (fetchRow("SELECT COUNT(*) as count FROM compliance_monitoring WHERE action_status = 'pending'", [], '') ?? [])['count'] ?? 0
         ];
     }
 
     private function calculatePaymentSuccessRate() {
-        $completed = fetchRow("SELECT COUNT(*) as count FROM cross_border_payments WHERE status = 'completed'", [], '')['count'];
-        $total = fetchRow("SELECT COUNT(*) as count FROM cross_border_payments", [], '')['count'];
+        $completed = (fetchRow("SELECT COUNT(*) as count FROM cross_border_payments WHERE status = 'completed'", [], '') ?? [])['count'] ?? 0;
+        $total = (fetchRow("SELECT COUNT(*) as count FROM cross_border_payments", [], '') ?? [])['count'] ?? 0;
 
         return $total > 0 ? round(($completed / $total) * 100, 2) : 0;
     }
 
     private function calculateComplianceRate() {
-        $compliant = fetchRow("SELECT COUNT(*) as count FROM compliance_monitoring WHERE compliance_status = 'compliant'", [], '')['count'];
-        $total = fetchRow("SELECT COUNT(*) as count FROM compliance_monitoring", [], '')['count'];
+        $compliant = (fetchRow("SELECT COUNT(*) as count FROM compliance_monitoring WHERE compliance_status = 'compliant'", [], '') ?? [])['count'] ?? 0;
+        $total = (fetchRow("SELECT COUNT(*) as count FROM compliance_monitoring", [], '') ?? [])['count'] ?? 0;
 
         return $total > 0 ? round(($compliant / $total) * 100, 2) : 0;
     }

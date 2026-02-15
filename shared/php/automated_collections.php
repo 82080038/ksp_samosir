@@ -83,7 +83,7 @@ class AutomatedCollections {
             GROUP BY p.id, a.id, a.nama_lengkap, a.no_hp, a.email, p.jumlah_pinjaman, p.tanggal_pencairan, lp.last_payment_date, lp.total_paid
             HAVING amount_overdue > 0
             ORDER BY days_overdue DESC, amount_overdue DESC
-        ", [], '');
+        ", [], '') ?? [];
     }
 
     /**
@@ -153,7 +153,7 @@ class AutomatedCollections {
             WHERE ca.status = 'active'
             AND ca.next_action_date <= CURDATE()
             ORDER BY ca.priority_level DESC, ca.amount_overdue DESC
-        ", [], '');
+        ", [], '') ?? [];
     }
 
     /**

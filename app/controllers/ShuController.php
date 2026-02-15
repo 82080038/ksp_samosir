@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/BaseController.php';
-require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../../config/config.php';
 
 /**
  * ShuController handles SHU (Sisa Hasil Usaha) calculation and distribution.
@@ -16,7 +16,7 @@ class ShuController extends BaseController {
         $stats = $this->getShuStats();
         $recent_distributions = $this->getRecentDistributions();
 
-        $this->render(__DIR__ . '/../views/shu/index.php', [
+        $this->render('shu/index', [
             'stats' => $stats,
             'recent_distributions' => $recent_distributions
         ]);
@@ -38,7 +38,7 @@ class ShuController extends BaseController {
             }
 
             // Call stored procedure to calculate SHU
-            $conn = getConnection();
+            $conn = getLegacyConnection();
             $stmt = $conn->prepare("CALL calculate_shu(?, ?)");
             $stmt->bind_param('ss', $periode_start, $periode_end);
 
@@ -55,7 +55,7 @@ class ShuController extends BaseController {
             }
         }
 
-        $this->render(__DIR__ . '/../views/shu/calculate.php');
+        $this->render('shu/calculate');
     }
 
     /**
@@ -68,12 +68,12 @@ class ShuController extends BaseController {
         $perPage = ITEMS_PER_PAGE;
         $offset = ($page - 1) * $perPage;
 
-        $total = fetchRow("SELECT COUNT(*) as count FROM profit_distributions")['count'];
+        $total = (fetchRow("SELECT COUNT(*) as count FROM profit_distributions") ?? [])['count'] ?? 0;
         $totalPages = ceil($total / $perPage);
 
         $distributions = fetchAll("SELECT pd.*, u.full_name as approved_by_name FROM profit_distributions pd LEFT JOIN users u ON pd.approved_by = u.id ORDER BY pd.created_at DESC LIMIT ? OFFSET ?", [$perPage, $offset], 'ii');
 
-        $this->render(__DIR__ . '/../views/shu/distribute.php', [
+        $this->render('shu/distribute', [
             'distributions' => $distributions,
             'page' => $page,
             'totalPages' => $totalPages
@@ -136,7 +136,7 @@ class ShuController extends BaseController {
             redirect('shu/distribute');
         }
 
-        $this->render(__DIR__ . '/../views/shu/create_distribution.php');
+        $this->render('shu/create_distribution');
     }
 
     /**
@@ -168,7 +168,7 @@ class ShuController extends BaseController {
             ", [$member_id], 'i');
             $shu_history = fetchAll("SELECT ms.*, pd.periode, pd.tanggal_distribusi FROM member_shu ms JOIN profit_distributions pd ON ms.distribution_id = pd.id WHERE ms.member_id = ? ORDER BY pd.tanggal_distribusi DESC", [$member_id], 'i');
 
-            $this->render(__DIR__ . '/../views/shu/member_report.php', [
+            $this->render('shu/member_report', [
                 'member' => $member,
                 'shu_history' => $shu_history
             ]);
@@ -180,10 +180,10 @@ class ShuController extends BaseController {
 
             $members = fetchAll("SELECT a.*, COALESCE(SUM(ms.total_shu), 0) as total_shu FROM anggota a LEFT JOIN member_shu ms ON a.id = ms.member_id GROUP BY a.id ORDER BY a.nama_lengkap LIMIT ? OFFSET ?", [$perPage, $offset], 'ii');
 
-            $total = fetchRow("SELECT COUNT(*) as count FROM anggota")['count'];
+            $total = (fetchRow("SELECT COUNT(*) as count FROM anggota") ?? [])['count'] ?? 0;
             $totalPages = ceil($total / $perPage);
 
-            $this->render(__DIR__ . '/../views/shu/reports.php', [
+            $this->render('shu/reports', [
                 'members' => $members,
                 'page' => $page,
                 'totalPages' => $totalPages
@@ -195,21 +195,17 @@ class ShuController extends BaseController {
      * Get SHU statistics.
      */
     private function getShuStats() {
-        $stats = [];
-
-        // Total SHU distributed
-        $stats['total_shu_distributed'] = fetchRow("SELECT COALESCE(SUM(shu_anggota), 0) as total FROM profit_distributions WHERE status = 'approved'")['total'];
-
-        // Total dividends distributed
-        $stats['total_dividends_distributed'] = fetchRow("SELECT COALESCE(SUM(dividen_investor), 0) as total FROM profit_distributions WHERE status = 'approved'")['total'];
-
-        // Number of distributions
-        $stats['total_distributions'] = fetchRow("SELECT COUNT(*) as total FROM profit_distributions WHERE status = 'approved'")['total'];
-
-        // Pending payments
-        $stats['pending_member_payments'] = fetchRow("SELECT COUNT(*) as total FROM member_shu WHERE status_pembayaran = 'belum_bayar'")['total'];
-        $stats['pending_investor_payments'] = fetchRow("SELECT COUNT(*) as total FROM investor_dividends WHERE status_pembayaran = 'belum_bayar'")['total'];
-
+        try {
+            $stats = [
+                'total_shu_distributed' => (fetchRow("SELECT COALESCE(SUM(shu_anggota), 0) as total FROM profit_distributions WHERE status = 'approved'") ?? [])['total'] ?? 0,
+                'total_dividends_distributed' => (fetchRow("SELECT COALESCE(SUM(dividen_investor), 0) as total FROM profit_distributions WHERE status = 'approved'") ?? [])['total'] ?? 0,
+                'total_distributions' => (fetchRow("SELECT COUNT(*) as total FROM profit_distributions WHERE status = 'approved'") ?? [])['total'] ?? 0,
+                'pending_member_payments' => (fetchRow("SELECT COUNT(*) as total FROM member_shu WHERE status_pembayaran = 'belum_bayar'") ?? [])['total'] ?? 0,
+                'pending_investor_payments' => (fetchRow("SELECT COUNT(*) as total FROM investor_dividends WHERE status_pembayaran = 'belum_bayar'") ?? [])['total'] ?? 0,
+            ];
+        } catch (Exception $e) {
+            $stats = ['total_shu_distributed' => 0, 'total_dividends_distributed' => 0, 'total_distributions' => 0, 'pending_member_payments' => 0, 'pending_investor_payments' => 0];
+        }
         return $stats;
     }
 
@@ -217,6 +213,6 @@ class ShuController extends BaseController {
      * Get recent distributions.
      */
     private function getRecentDistributions() {
-        return fetchAll("SELECT pd.*, u.full_name as approved_by_name FROM profit_distributions pd LEFT JOIN users u ON pd.approved_by = u.id ORDER BY pd.created_at DESC LIMIT 5");
+        return fetchAll("SELECT pd.*, u.full_name as approved_by_name FROM profit_distributions pd LEFT JOIN users u ON pd.approved_by = u.id ORDER BY pd.created_at DESC LIMIT 5") ?? [];
     }
 }

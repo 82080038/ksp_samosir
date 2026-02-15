@@ -258,7 +258,7 @@ class DatabaseBackup {
      * Record backup in database
      */
     private function recordBackup($filename, $type, $size, $description) {
-        $conn = getConnection();
+        $conn = getLegacyConnection();
         $stmt = $conn->prepare("INSERT INTO backup_files (filename, type, description, file_size, created_by, created_at) VALUES (?, ?, ?, ?, ?, NOW())");
         $created_by = 1; // System user
         $stmt->bind_param('sssdi', $filename, $type, $description, $size, $created_by);
@@ -271,7 +271,7 @@ class DatabaseBackup {
      * Record restore operation
      */
     private function recordRestore($filename) {
-        $conn = getConnection();
+        $conn = getLegacyConnection();
         $stmt = $conn->prepare("INSERT INTO backup_logs (action, filename, status, details, performed_by, performed_at) VALUES (?, ?, 'completed', 'Database restored from backup', ?, NOW())");
         $performed_by = 1; // System user
         $stmt->bind_param('ssi', 'restore', $filename, $performed_by);

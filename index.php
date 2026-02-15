@@ -11,23 +11,32 @@ require_once __DIR__ . '/config/config.php';
 
 // Route handling
 $request = $_SERVER['REQUEST_URI'] ?? '';
-$request = str_replace('/ksp_samosir', '', $request ?? '');
+$basePath = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
+if ($basePath === '/' || $basePath === '.') {
+    $basePath = '';
+}
+if ($basePath !== '' && strpos($request, $basePath) === 0) {
+    $request = substr($request, strlen($basePath));
+}
 $request = rtrim($request, '/');
 $segments = explode('/', $request);
 
 $page = '';
-if ($segments[0] === '') {
+if (empty($segments[0])) {
     $page = $segments[1] ?? '';
 } else {
     $page = $segments[0];
 }
 
-if ($page === '') {
+// Sanitize page name
+$page = preg_replace('/[^a-zA-Z0-9_\-]/', '', $page);
+
+if (empty($page)) {
     redirect('dashboard');
 }
 
-$action = $segments[2] ?? 'index';
-$id = $segments[3] ?? null;
+$action = preg_replace('/[^a-zA-Z0-9_\-]/', '', $segments[2] ?? 'index');
+$id = isset($segments[3]) ? (int)$segments[3] : null;
 
 // Authentication check (DISABLED for development)
 // $public_pages = ['login', 'logout', 'register'];
@@ -44,17 +53,36 @@ $id = $segments[3] ?? null;
 // Route to controller
 $routeMatched = false;
 switch ($page) {
-    case 'logout':
-        require_once __DIR__ . '/app/controllers/AuthController.php';
-        $controller = new AuthController();
-        $controller->logout();
+    case 'api':
+        require_once __DIR__ . '/api/index.php';
         $routeMatched = true;
         break;
         
+    case 'api-docs':
+        require_once __DIR__ . '/api/docs.php';
+        $routeMatched = true;
+        break;
+        
+    case 'logout':
+        if (file_exists(__DIR__ . '/app/controllers/AuthController.php')) {
+            require_once __DIR__ . '/app/controllers/AuthController.php';
+            $controller = new AuthController();
+            $controller->logout();
+            $routeMatched = true;
+        }
+        break;
+        
     case 'dashboard':
-        require_once __DIR__ . '/app/controllers/DashboardController.php';
-        $controller = new DashboardController();
-        $controller->index();
+        // Enhanced dashboard routing
+        if (isset($_GET['enhanced']) && $_GET['enhanced'] === 'true') {
+            require_once __DIR__ . '/app/controllers/DashboardController.php';
+            $controller = new DashboardController();
+            $controller->index();
+        } else {
+            require_once __DIR__ . '/app/controllers/DashboardController.php';
+            $controller = new DashboardController();
+            $controller->index();
+        }
         $routeMatched = true;
         break;
         
@@ -62,6 +90,34 @@ switch ($page) {
         require_once __DIR__ . '/app/controllers/LogsController.php';
         $controller = new LogsController();
         $controller->index();
+        $routeMatched = true;
+        break;
+        
+    case 'accounting':
+        require_once __DIR__ . '/app/controllers/AccountingController.php';
+        $controller = new AccountingController();
+        switch ($action) {
+            case 'jurnal':
+                $controller->jurnal();
+                break;
+            case 'bukuBesar':
+                $controller->bukuBesar();
+                break;
+            case 'neracaSaldo':
+                $controller->neracaSaldo();
+                break;
+            case 'neraca':
+                $controller->neraca();
+                break;
+            case 'labaRugi':
+                $controller->labaRugi();
+                break;
+            case 'createJournal':
+                $controller->createJournal();
+                break;
+            default:
+                $controller->index();
+        }
         $routeMatched = true;
         break;
         
@@ -129,9 +185,84 @@ switch ($page) {
         $routeMatched = true;
         break;
         
+    case 'inventory':
+        require_once __DIR__ . '/app/controllers/InventoryController.php';
+        $controller = new InventoryController();
+        switch ($action) {
+            case 'items':
+                $controller->items();
+                break;
+            case 'warehouses':
+                $controller->warehouses();
+                break;
+            case 'suppliers':
+                $controller->suppliers();
+                break;
+            case 'stockMovements':
+                $controller->stockMovements();
+                break;
+            case 'addStockMovement':
+                $controller->addStockMovement();
+                break;
+            default:
+                $controller->index();
+        }
+        $routeMatched = true;
+        break;
+        
+    case 'customer_service':
+        require_once __DIR__ . '/app/controllers/CustomerServiceController.php';
+        $controller = new CustomerServiceController();
+        switch ($action) {
+            case 'index':
+                $controller->index();
+                break;
+            case 'tickets':
+                $controller->tickets();
+                break;
+            case 'createTicket':
+                $controller->createTicket();
+                break;
+            case 'returns':
+                $controller->returns();
+                break;
+            case 'createReturn':
+                $controller->createReturn();
+                break;
+            case 'refunds':
+                $controller->refunds();
+                break;
+            case 'communication':
+                $controller->communication();
+                break;
+            default:
+                $controller->index();
+        }
+        $routeMatched = true;
+        break;
+        
+    case 'analytics':
+        require_once __DIR__ . '/app/controllers/AnalyticsController.php';
+        $controller = new AnalyticsController();
+        switch ($action) {
+            case 'dashboard':
+                $controller->dashboard();
+                break;
+            case 'reports':
+                $controller->reports();
+                break;
+            case 'kpi':
+                $controller->kpi();
+                break;
+            default:
+                $controller->index();
+        }
+        $routeMatched = true;
+        break;
+        
     case 'anggota':
-        require_once __DIR__ . '/app/controllers/AnggotaController.php';
-        $controller = new AnggotaController();
+        require_once __DIR__ . '/app/controllers/AnggotaCRUDController.php';
+        $controller = new AnggotaCRUDController();
         switch ($action) {
             case 'index':
                 $controller->index();
@@ -158,8 +289,8 @@ switch ($page) {
         break;
         
     case 'simpanan':
-        require_once __DIR__ . '/app/controllers/SimpananController.php';
-        $controller = new SimpananController();
+        require_once __DIR__ . '/app/controllers/SimpananCRUDController.php';
+        $controller = new SimpananCRUDController();
         switch ($action) {
             case 'index':
                 $controller->index();
@@ -180,7 +311,10 @@ switch ($page) {
                 $controller->delete($id);
                 break;
             case 'transaksi':
-                $controller->transaksi();
+                // Keep existing transaksi method if needed
+                require_once __DIR__ . '/app/controllers/SimpananController.php';
+                $legacyController = new SimpananController();
+                $legacyController->transaksi();
                 break;
             default:
                 $controller->index();
@@ -189,8 +323,8 @@ switch ($page) {
         break;
         
     case 'pinjaman':
-        require_once __DIR__ . '/app/controllers/PinjamanController.php';
-        $controller = new PinjamanController();
+        require_once __DIR__ . '/app/controllers/PinjamanCRUDController.php';
+        $controller = new PinjamanCRUDController();
         switch ($action) {
             case 'index':
                 $controller->index();
@@ -210,17 +344,121 @@ switch ($page) {
             case 'delete':
                 $controller->delete($id);
                 break;
-            case 'approve':
-                $controller->approve($id);
+            case 'updateStatus':
+                $controller->updateStatus($id);
                 break;
-            case 'cairkan':
-                $controller->cairkan($id);
-                break;
-            case 'angsuran':
-                $controller->angsuran();
+            case 'approvals':
+                $controller->approvals();
                 break;
             default:
                 $controller->index();
+        }
+        $routeMatched = true;
+        break;
+        
+    case 'produk':
+        require_once __DIR__ . '/app/controllers/ProdukCRUDController.php';
+        $controller = new ProdukCRUDController();
+        switch ($action) {
+            case 'index':
+                $controller->index();
+                break;
+            case 'create':
+                $controller->create();
+                break;
+            case 'edit':
+                $controller->edit($id);
+                break;
+            case 'store':
+                $controller->store();
+                break;
+            case 'update':
+                $controller->update($id);
+                break;
+            case 'delete':
+                $controller->delete($id);
+                break;
+            default:
+                $controller->index();
+        }
+        $routeMatched = true;
+        break;
+        
+    case 'penjualan':
+        require_once __DIR__ . '/app/controllers/PenjualanCRUDController.php';
+        $controller = new PenjualanCRUDController();
+        switch ($action) {
+            case 'index':
+                $controller->index();
+                break;
+            case 'create':
+                $controller->create();
+                break;
+            case 'edit':
+                $controller->edit($id);
+                break;
+            case 'store':
+                $controller->store();
+                break;
+            case 'update':
+                $controller->update($id);
+                break;
+            case 'delete':
+                $controller->delete($id);
+                break;
+            default:
+                $controller->index();
+        }
+        $routeMatched = true;
+        break;
+        
+    case 'pelanggan':
+        require_once __DIR__ . '/app/controllers/PelangganCRUDController.php';
+        $controller = new PelangganCRUDController();
+        switch ($action) {
+            case 'index':
+                $controller->index();
+                break;
+            case 'create':
+                $controller->create();
+                break;
+            case 'edit':
+                $controller->edit($id);
+                break;
+            case 'store':
+                $controller->store();
+                break;
+            case 'update':
+                $controller->update($id);
+                break;
+            case 'delete':
+                $controller->delete($id);
+                break;
+            default:
+                $controller->index();
+        }
+        $routeMatched = true;
+        break;
+        
+    case 'admin':
+        require_once __DIR__ . '/app/controllers/AdminDashboardController.php';
+        $controller = new AdminDashboardController();
+        switch ($action) {
+            case 'index':
+                // Load the CRUD dashboard view
+                require_once __DIR__ . '/app/helpers/DependencyManager.php';
+                $pageInfo = initView();
+                $user = getCurrentUser();
+                $role = $user['role'] ?? null;
+                
+                // Use BaseController render method to include layout
+                require_once __DIR__ . '/app/controllers/BaseController.php';
+                $baseController = new BaseController();
+                $baseController->render('admin/dashboard_crud', []);
+                break;
+            default:
+                $baseController = new BaseController();
+                $baseController->render('admin/dashboard_crud', []);
         }
         $routeMatched = true;
         break;
@@ -685,12 +923,185 @@ switch ($page) {
         $routeMatched = true;
         break;
         
+    case 'ai_credit':
+        require_once __DIR__ . '/app/controllers/AICreditController.php';
+        $controller = new AICreditController();
+        switch ($action) {
+            case 'index':
+                $controller->index();
+                break;
+            case 'scoreApplication':
+                $controller->scoreApplication($id);
+                break;
+            case 'viewScore':
+                $controller->viewScore($id);
+                break;
+            case 'bulkScoring':
+                $controller->bulkScoring();
+                break;
+            case 'processBulkScoring':
+                $controller->processBulkScoring();
+                break;
+            case 'modelTraining':
+                $controller->modelTraining();
+                break;
+            case 'retrainModel':
+                $controller->retrainModel();
+                break;
+            default:
+                $controller->index();
+        }
+        $routeMatched = true;
+        break;
+        
+    case 'digital_documents':
+        require_once __DIR__ . '/app/controllers/DigitalDocumentsController.php';
+        $controller = new DigitalDocumentsController();
+        switch ($action) {
+            case 'index':
+                $controller->index();
+                break;
+            case 'upload':
+                $controller->upload();
+                break;
+            case 'processUpload':
+                $controller->processUpload();
+                break;
+            case 'download':
+                $controller->download($id);
+                break;
+            case 'delete':
+                $controller->delete($id);
+                break;
+            default:
+                $controller->index();
+        }
+        $routeMatched = true;
+        break;
+        
+    case 'notifications':
+        require_once __DIR__ . '/app/controllers/BaseController.php';
+        $controller = new BaseController();
+        $controller->render('notifications/index');
+        $routeMatched = true;
+        break;
+
+    case 'tax':
+        require_once __DIR__ . '/app/controllers/BaseController.php';
+        $controller = new BaseController();
+        switch ($action) {
+            case 'compliance':
+                $controller->render('tax/compliance');
+                break;
+            case 'pph21':
+                $controller->render('tax/pph21_calculation');
+                break;
+            case 'pph23':
+                $controller->render('tax/pph23_calculation');
+                break;
+            case 'pph25':
+                $controller->render('tax/pph25_calculation');
+                break;
+            case 'reports':
+                $controller->render('tax/tax_reports');
+                break;
+            default:
+                $controller->render('tax/index');
+        }
+        $routeMatched = true;
+        break;
+
+    case 'payroll':
+        require_once __DIR__ . '/app/controllers/BaseController.php';
+        $controller = new BaseController();
+        $controller->render('payroll/index');
+        $routeMatched = true;
+        break;
+
+    case 'learning':
+        require_once __DIR__ . '/app/controllers/BaseController.php';
+        $controller = new BaseController();
+        $controller->render('learning/index');
+        $routeMatched = true;
+        break;
+
+    case 'member':
+        require_once __DIR__ . '/app/controllers/BaseController.php';
+        $controller = new BaseController();
+        $controller->render('member/index');
+        $routeMatched = true;
+        break;
+
+    case 'koperasi_modul':
+        require_once __DIR__ . '/app/controllers/KoperasiModulController.php';
+        $controller = new KoperasiModulController();
+        if ($action && $action !== 'index') {
+            $controller->handleModule($action);
+        } else {
+            $controller->index();
+        }
+        $routeMatched = true;
+        break;
+
+    case 'agricultural':
+        require_once __DIR__ . '/app/controllers/BaseController.php';
+        $controller = new BaseController();
+        $controller->render('agricultural/dashboard');
+        $routeMatched = true;
+        break;
+
+    case 'registration':
+        require_once __DIR__ . '/app/controllers/BaseController.php';
+        $controller = new BaseController();
+        switch ($action) {
+            case 'polres':
+                $controller->render('registration/form_polres');
+                break;
+            default:
+                $controller->render('registration/form');
+        }
+        $routeMatched = true;
+        break;
+
     default:
-        $routeMatched = false;
+        // Unknown route - will be handled by 404 logic below
+        break;
 }
 
+// If no route matched, show 404 or try to load as static page
 if (!$routeMatched) {
-    http_response_code(404);
-    require_once __DIR__ . '/app/views/errors/404.php';
-    exit;
+    // Try to find if it's a controller action (e.g., anggota/create, pinjaman/edit)
+    if (strpos($page, '/') !== false) {
+        list($controllerName, $action) = explode('/', $page, 2);
+        $controllerFile = __DIR__ . '/app/controllers/' . ucfirst($controllerName) . 'Controller.php';
+        
+        if (file_exists($controllerFile)) {
+            require_once $controllerFile;
+            $controllerClass = ucfirst($controllerName) . 'Controller';
+            
+            if (class_exists($controllerClass)) {
+                $controller = new $controllerClass();
+                if (method_exists($controller, $action)) {
+                    $controller->$action($id);
+                    $routeMatched = true;
+                }
+            }
+        }
+    }
+    
+    // If still no match, show 404
+    if (!$routeMatched) {
+        http_response_code(404);
+        require_once __DIR__ . '/app/helpers/DependencyManager.php';
+        $pageInfo = initView();
+        $pageInfo['title'] = 'Page Not Found';
+        
+        require_once __DIR__ . '/app/controllers/BaseController.php';
+        $baseController = new BaseController();
+        $baseController->render('errors/404', [
+            'requested_page' => $page,
+            'action' => $action,
+            'id' => $id
+        ]);
+    }
 }

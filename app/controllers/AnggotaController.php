@@ -12,37 +12,43 @@ class AnggotaController extends BaseController {
     public function index() {
         // $this->ensureLoginAndRole(['admin', 'staff']); // DISABLED for development
 
-        require_once __DIR__ . '/../shared/php/mobile_optimizer.php';
+        // Load mobile optimizer with fallback
+        if (file_exists(APP_PATH . '/shared/php/mobile_optimizer.php')) {
+            require_once APP_PATH . '/shared/php/mobile_optimizer.php';
+            $device = function_exists('getDeviceInfo') ? getDeviceInfo() : ['type' => 'desktop', 'is_mobile' => false];
+            $perPage = function_exists('getMobilePagination') ? getMobilePagination() : 10;
+        } else {
+            $device = ['type' => 'desktop', 'is_mobile' => false];
+            $perPage = 10;
+        }
 
-        $device = getDeviceInfo();
-        $perPage = getMobilePagination();
         $page = intval($_GET['page'] ?? 1);
         $offset = ($page - 1) * $perPage;
         
-        $total = fetchRow("SELECT COUNT(*) as count FROM anggota")['count'];
+        $total = (fetchRow("SELECT COUNT(*) as count FROM anggota") ?? [])['count'] ?? 0;
         $totalPages = ceil($total / $perPage);
         
-        // Build optimized query for device
-        $baseQuery = "
-            FROM anggota a
-            LEFT JOIN addresses addr ON a.address_id = addr.id AND addr.is_primary = 1
-            LEFT JOIN entity_addresses ea ON ea.entity_type = 'member' AND ea.entity_id = a.id AND ea.address_id = addr.id
-            LEFT JOIN contacts c_phone ON a.primary_contact_id = c_phone.id AND c_phone.contact_type = 'phone'
-            LEFT JOIN contacts c_email ON c_email.id = (SELECT id FROM contacts WHERE contact_type = 'email' AND id IN (SELECT contact_id FROM entity_contacts WHERE entity_type = 'member' AND entity_id = a.id) LIMIT 1)
-            ORDER BY a.created_at DESC
-            LIMIT ? OFFSET ?
-        ";
+        // Simple query without complex joins for now
+        $anggota = fetchAll(
+            "SELECT a.id, a.no_anggota, a.nama_lengkap, a.nik, a.status, a.tanggal_gabung, a.alamat, a.no_hp, a.email
+             FROM anggota a 
+             ORDER BY a.created_at DESC 
+             LIMIT ? OFFSET ?",
+            [$perPage, $offset],
+            'ii'
+        );
 
-        $selectFields = "a.id, a.no_anggota, a.nama_lengkap, a.nik, a.status, a.tanggal_gabung, COALESCE(addr.street_address, a.alamat) as alamat, COALESCE(c_phone.contact_value, a.no_hp) as no_hp, COALESCE(c_email.contact_value, a.email) as email";
-        $fullQuery = "SELECT {$selectFields} {$baseQuery}";
-        $optimizedQuery = optimizeQueryForDevice($fullQuery, 'anggota');
-        $anggota = fetchAll($optimizedQuery, [$perPage, $offset], 'ii');
+        // Calculate statistics
+        $stats = [
+            'total_anggota' => (fetchRow("SELECT COUNT(*) as count FROM anggota") ?? [])['count'] ?? 0,
+            'anggota_aktif' => (fetchRow("SELECT COUNT(*) as count FROM anggota WHERE status = 'aktif'") ?? [])['count'] ?? 0,
+            'anggota_nonaktif' => (fetchRow("SELECT COUNT(*) as count FROM anggota WHERE status IN ('nonaktif', 'keluar')") ?? [])['count'] ?? 0,
+            'pendaftaran_bulan_ini' => (fetchRow("SELECT COUNT(*) as count FROM anggota WHERE MONTH(tanggal_gabung) = MONTH(CURRENT_DATE) AND YEAR(tanggal_gabung) = YEAR(CURRENT_DATE)") ?? [])['count'] ?? 0
+        ];
 
-        // Compress data for mobile devices
-        $anggota = compressMobileData($anggota);
-
-        $this->render(__DIR__ . '/../views/anggota/index.php', [
+        $this->render('anggota/index', [
             'anggota' => $anggota,
+            'stats' => $stats,
             'page' => $page,
             'totalPages' => $totalPages,
             'device' => $device
@@ -54,7 +60,7 @@ class AnggotaController extends BaseController {
      */
     public function create() {
         // $this->ensureLoginAndRole(['admin', 'staff']); // DISABLED for development
-        $this->render(__DIR__ . '/../views/anggota/create.php');
+        $this->render('anggota/create');
     }
 
     /**
@@ -115,7 +121,7 @@ class AnggotaController extends BaseController {
             flashMessage('error', 'Data anggota tidak ditemukan');
             redirect('anggota');
         }
-        $this->render(__DIR__ . '/../views/anggota/edit.php', ['anggota' => $row]);
+        $this->render('anggota/edit', ['anggota' => $row]);
     }
 
     /**

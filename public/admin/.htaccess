@@ -1,0 +1,44 @@
+RewriteEngine On
+
+# Admin Dashboard Routes
+RewriteRule ^admin/?$ app/views/admin/dashboard.php [L]
+RewriteRule ^admin/dashboard/?$ app/views/admin/dashboard.php [L]
+
+# API Routes
+RewriteRule ^api/admin/(.*)$ app/api/AdminAPIRouter.php?api=admin [L,QSA]
+RewriteRule ^api/super-admin/(.*)$ app/api/AdminAPIRouter.php?api=super_admin [L,QSA]
+
+# Module Routes
+RewriteRule ^admin/([^/]+)/?$ app/views/admin/modules/$1.php [L]
+RewriteRule ^admin/([^/]+)/([^/]+)/?$ app/views/admin/modules/$1/$2.php [L]
+
+# Static Assets
+RewriteRule ^admin/assets/(.*)$ public/admin/assets/$1 [L]
+RewriteRule ^admin/js/(.*)$ public/js/$1 [L]
+RewriteRule ^admin/css/(.*)$ public/css/$1 [L]
+
+# Security Headers
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options nosniff
+    Header always set X-Frame-Options DENY
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# Disable directory listing
+Options -Indexes
+
+# PHP Settings
+<IfModule mod_php7.c>
+    php_value upload_max_filesize 10M
+    php_value post_max_size 10M
+    php_value memory_limit 256M
+    php_value max_execution_time 300
+</IfModule>
+
+<IfModule mod_php8.c>
+    php_value upload_max_filesize 10M
+    php_value post_max_size 10M
+    php_value memory_limit 256M
+    php_value max_execution_time 300
+</IfModule>

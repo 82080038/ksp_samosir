@@ -1,6 +1,67 @@
+<?php
+// Use centralized dependency management
+require_once __DIR__ . '/../../../app/helpers/DependencyManager.php';
+
+// Initialize view with all dependencies
+$pageInfo = initView();
+$user = getCurrentUser();
+$role = $user['role'] ?? null;
+?>
+
+
+</div>
+
+<!-- Page Header with Dynamic Title -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom" id="page-header">
+    <h1 class="h2 page-title" id="page-title" style="color: black;" data-page="shu-calculate">Perhitungan SHU</h1>
+    <div class="btn-toolbar mb-2 mb-md-0" id="page-actions">
+        <div class="btn-group me-2">
+                <a href="shu" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Kembali
+                </a>
+            </div>
+    </div>
+</div>
+
+<!-- Flash Messages -->
+<?php if ($error = getFlashMessage('error')): ?>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        <?= $error ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
+
+<?php if ($success = getFlashMessage('success')): ?>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-2"></i>
+        <?= $success ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
+
+
+
+<!-- Flash Messages -->
+<?php if ($error = getFlashMessage('error')): ?>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        <?= $error ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
+
+<?php if ($success = getFlashMessage('success')): ?>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-2"></i>
+        <?= $success ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
+
 <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
-        <h2>Hitung SHU</h2>
+        
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="<?= base_url('shu') ?>">SHU</a></li>
@@ -21,7 +82,7 @@
     <div class="col-lg-8">
         <div class="card">
             <div class="card-header">
-                <h5>Form Perhitungan SHU</h5>
+                
             </div>
             <div class="card-body">
                 <form method="POST" action="<?= base_url('shu/calculate') ?>">
@@ -41,7 +102,7 @@
                     </div>
 
                     <div class="alert alert-info">
-                        <h6>Catatan:</h6>
+                        
                         <p>Perhitungan SHU akan menggunakan stored procedure yang menghitung berdasarkan:</p>
                         <ul class="mb-0">
                             <li>Modal anggota (simpanan pokok, wajib, sukarela)</li>
@@ -62,10 +123,10 @@
     <div class="col-lg-4">
         <div class="card">
             <div class="card-header">
-                <h5>Informasi SHU</h5>
+                
             </div>
             <div class="card-body">
-                <h6>Komponen Perhitungan SHU:</h6>
+                
                 <ul>
                     <li><strong>SHU dari Modal:</strong> Berdasarkan simpanan anggota</li>
                     <li><strong>SHU dari Jasa:</strong> Berdasarkan transaksi dengan anggota</li>
@@ -75,7 +136,7 @@
 
                 <hr>
 
-                <h6>Persentase Pembagian:</h6>
+                
                 <ul>
                     <li>Anggota: 70-80%</li>
                     <li>Cadangan: 10-20%</li>
@@ -87,7 +148,7 @@
 
         <div class="card mt-3">
             <div class="card-header">
-                <h5>Riwayat Perhitungan</h5>
+                
             </div>
             <div class="card-body">
                 <?php
@@ -118,3 +179,37 @@ document.getElementById('periode_start').addEventListener('change', function() {
     document.getElementById('periode_end').value = endDate.toISOString().split('T')[0];
 });
 </script>
+
+
+</div>
+
+<!-- JavaScript for DOM Manipulation -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Page shu - calculate initialized');
+    
+    // Update page title dynamically
+    if (typeof updatePageTitle !== 'undefined') {
+        updatePageTitle('Hitung', 'shu-calculate');
+    }
+});
+
+// Global functions
+function saveShu() {
+    const form = document.querySelector('form');
+    if (form) {
+        form.dispatchEvent(new Event('submit'));
+    }
+}
+</script>
+
+<style>
+/* Page-specific styles */
+.page-title {
+    font-weight: 700;
+}
+
+.main-content {
+    min-height: 400px;
+}
+</style>

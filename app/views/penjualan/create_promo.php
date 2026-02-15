@@ -1,6 +1,133 @@
+<?php
+// Use centralized dependency management
+require_once __DIR__ . '/../../../app/helpers/DependencyManager.php';
+
+// Initialize view with all dependencies
+$pageInfo = initView();
+$user = getCurrentUser();
+$role = $user['role'] ?? null;
+?>
+
+
+
+<!-- Page Header with Dynamic Title -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom" id="page-header">
+    <h1 class="h2 page-title" id="page-title" style="color: black;" data-page="penjualan-create-promo">Buat Promosi</h1>
+    <div class="btn-toolbar mb-2 mb-md-0" id="page-actions">
+        <div class="btn-group me-2">
+                <a href="penjualan" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Kembali
+                </a>
+            </div>
+    </div>
+</div>
+
+<!-- Flash Messages -->
+<?php if ($error = getFlashMessage('error')): ?>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        <?= $error ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
+
+<?php if ($success = getFlashMessage('success')): ?>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-2"></i>
+        <?= $success ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
+
+
+
+
+
+<!-- Flash Messages -->
+<?php if ($error = getFlashMessage('error')): ?>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        <?= $error ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
+
+<?php if ($success = getFlashMessage('success')): ?>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-2"></i>
+        <?= $success ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
+
+<?php
+// Use centralized dependency management
+require_once __DIR__ . '/../../../app/helpers/DependencyManager.php';
+
+// Initialize view with all dependencies
+$pageInfo = initView();
+$user = getCurrentUser();
+$role = $user['role'] ?? null;
+?>
+
+
+
+</div>
+
+<!-- Page Header with Dynamic Title -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom" id="page-header">
+    <h1 class="h2 page-title" id="page-title" style="color: black;" data-page="penjualan-create-promo">Buat Promosi</h1>
+    <div class="btn-toolbar mb-2 mb-md-0" id="page-actions">
+        <div class="btn-group me-2">
+                <a href="penjualan" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Kembali
+                </a>
+            </div>
+    </div>
+</div>
+
+<!-- Flash Messages -->
+<?php if ($error = getFlashMessage('error')): ?>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        <?= $error ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
+
+<?php if ($success = getFlashMessage('success')): ?>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-2"></i>
+        <?= $success ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
+
+
+
+
+
+
+<!-- Flash Messages -->
+<?php if ($error = getFlashMessage("error")): ?>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        <?= $error ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
+
+<?php if ($success = getFlashMessage("success")): ?>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-2"></i>
+        <?= $success ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
+
 <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
-        <h2>Buat Promo Baru</h2>
+        
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="<?= base_url('penjualan') ?>">Penjualan</a></li>
@@ -17,7 +144,7 @@
 
 <div class="card">
     <div class="card-header">
-        <h5>Form Promo</h5>
+        
     </div>
     <div class="card-body">
         <form method="POST" action="<?= base_url('penjualan/storePromo') ?>">
@@ -64,7 +191,7 @@
             </div>
 
             <div class="alert alert-info">
-                <h6>Contoh Penggunaan:</h6>
+                
                 <ul>
                     <li><strong>Diskon Persen:</strong> Kode "HEMAT20" memberikan diskon 20% dari total belanja</li>
                     <li><strong>Diskon Nominal:</strong> Kode "POTONG5000" memberikan potongan Rp 5.000 dari total belanja</li>
@@ -130,3 +257,71 @@ document.getElementById('jenis_diskon').addEventListener('change', function() {
 // Initialize
 document.getElementById('jenis_diskon').dispatchEvent(new Event('change'));
 </script>
+
+
+</div>
+
+<!-- JavaScript for DOM Manipulation -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Page penjualan - create_promo initialized');
+    
+    // Update page title dynamically
+    if (typeof updatePageTitle !== 'undefined') {
+        updatePageTitle('Create_promo', 'penjualan-create_promo');
+    }
+});
+
+// Global functions
+function savePenjualan() {
+    const form = document.querySelector('form');
+    if (form) {
+        form.dispatchEvent(new Event('submit'));
+    }
+}
+</script>
+
+<style>
+/* Page-specific styles */
+.page-title {
+    font-weight: 700;
+}
+
+.main-content {
+    min-height: 400px;
+}
+</style>
+
+
+</div>
+
+<!-- JavaScript for DOM Manipulation -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Page penjualan - create_promo initialized');
+    
+    // Update page title dynamically
+    if (typeof updatePageTitle !== 'undefined') {
+        updatePageTitle('Buat Promo', 'penjualan-create_promo');
+    }
+});
+
+// Global functions
+function savePenjualan() {
+    const form = document.querySelector('form');
+    if (form) {
+        form.dispatchEvent(new Event('submit'));
+    }
+}
+</script>
+
+<style>
+/* Page-specific styles */
+.page-title {
+    font-weight: 700;
+}
+
+.main-content {
+    min-height: 400px;
+}
+</style>

@@ -18,7 +18,7 @@ function getKoperasiActivities($type = null) {
     
     $sql .= " ORDER BY activity_type, activity_name";
     
-    return fetchAll($sql, $params);
+    return fetchAll($sql, $params) ?? [];
 }
 
 /**
@@ -47,7 +47,7 @@ function postKoperasiTransaction($transaction_id) {
  * Get SHU components
  */
 function getSHUComponents() {
-    return fetchAll("SELECT * FROM shu_components WHERE is_active = 1 ORDER BY component_type, percentage_weight DESC");
+    return fetchAll("SELECT * FROM shu_components WHERE is_active = 1 ORDER BY component_type, percentage_weight DESC") ?? [];
 }
 
 /**
@@ -210,7 +210,7 @@ function getSHUPeriods($status = null) {
     
     $sql .= " ORDER BY period_start DESC";
     
-    return fetchAll($sql, $params);
+    return fetchAll($sql, $params) ?? [];
 }
 
 /**
@@ -224,7 +224,7 @@ function getSHUDistribution($period_id) {
         JOIN shu_components sc ON smd.component_code = sc.component_code
         WHERE smd.shu_period_id = ?
         ORDER BY a.nama_lengkap, sc.component_type
-    ", [$period_id], 'i');
+    ", [$period_id], 'i') ?? [];
 }
 
 /**
@@ -257,7 +257,7 @@ function getKoperasiMeetings($type = null, $status = null) {
     
     $sql .= " ORDER BY meeting_date DESC";
     
-    return fetchAll($sql, $params);
+    return fetchAll($sql, $params) ?? [];
 }
 
 /**

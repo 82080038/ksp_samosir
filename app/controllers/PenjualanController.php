@@ -9,12 +9,12 @@ class PenjualanController extends BaseController {
         $perPage = ITEMS_PER_PAGE;
         $offset = ($page - 1) * $perPage;
 
-        $total = fetchRow("SELECT COUNT(*) as count FROM penjualan")['count'];
+        $total = (fetchRow("SELECT COUNT(*) as count FROM penjualan") ?? [])['count'] ?? 0;
         $totalPages = ceil($total / $perPage);
 
         $penjualan = fetchAll("SELECT p.*, pl.nama_pelanggan FROM penjualan p LEFT JOIN pelanggan pl ON p.pelanggan_id = pl.id ORDER BY p.tanggal_penjualan DESC LIMIT ? OFFSET ?", [$perPage, $offset], 'ii');
 
-        $this->render(__DIR__ . '/../views/penjualan/index.php', [
+        $this->render('penjualan/index', [
             'penjualan' => $penjualan,
             'page' => $page,
             'totalPages' => $totalPages
@@ -43,7 +43,7 @@ class PenjualanController extends BaseController {
         $produk = fetchAll("SELECT id, nama_produk, kode_produk, harga_jual, stok FROM produk WHERE is_active = 1 AND stok > 0 ORDER BY nama_produk");
         $promos = fetchAll("SELECT id, kode_promo, jenis_diskon, nilai_diskon FROM promos WHERE status = 'aktif' AND tanggal_akhir >= CURDATE() ORDER BY kode_promo");
 
-        $this->render(__DIR__ . '/../views/penjualan/create.php', [
+        $this->render('penjualan/create', [
             'pelanggan' => $pelanggan,
             'produk' => $produk,
             'promos' => $promos
@@ -146,12 +146,12 @@ class PenjualanController extends BaseController {
         $perPage = ITEMS_PER_PAGE;
         $offset = ($page - 1) * $perPage;
 
-        $total = fetchRow("SELECT COUNT(*) as count FROM agent_sales")['count'];
+        $total = (fetchRow("SELECT COUNT(*) as count FROM agent_sales") ?? [])['count'] ?? 0;
         $totalPages = ceil($total / $perPage);
 
         $agent_sales = fetchAll("SELECT asale.*, a.nama as agent_name FROM agent_sales asale LEFT JOIN agents a ON asale.agent_id = a.id ORDER BY asale.created_at DESC LIMIT ? OFFSET ?", [$perPage, $offset], 'ii');
 
-        $this->render(__DIR__ . '/../views/penjualan/agent_sales.php', [
+        $this->render('penjualan/agent_sales', [
             'agent_sales' => $agent_sales,
             'page' => $page,
             'totalPages' => $totalPages
@@ -164,7 +164,7 @@ class PenjualanController extends BaseController {
         $agents = fetchAll("SELECT a.id, a.nama, a.komisi_persen FROM agents a WHERE a.status = 'aktif' ORDER BY a.nama");
         $produk = fetchAll("SELECT id, nama_produk, kode_produk, harga_jual, stok FROM produk WHERE is_active = 1 AND stok > 0 ORDER BY nama_produk");
 
-        $this->render(__DIR__ . '/../views/penjualan/create_agent_sale.php', [
+        $this->render('penjualan/create_agent_sale', [
             'agents' => $agents,
             'produk' => $produk
         ]);
@@ -239,12 +239,12 @@ class PenjualanController extends BaseController {
         $perPage = ITEMS_PER_PAGE;
         $offset = ($page - 1) * $perPage;
 
-        $total = fetchRow("SELECT COUNT(*) as count FROM agent_commissions")['count'];
+        $total = (fetchRow("SELECT COUNT(*) as count FROM agent_commissions") ?? [])['count'] ?? 0;
         $totalPages = ceil($total / $perPage);
 
         $commissions = fetchAll("SELECT ac.*, a.nama as agent_name FROM agent_commissions ac LEFT JOIN agents a ON ac.agent_id = a.id ORDER BY ac.created_at DESC LIMIT ? OFFSET ?", [$perPage, $offset], 'ii');
 
-        $this->render(__DIR__ . '/../views/penjualan/commissions.php', [
+        $this->render('penjualan/commissions', [
             'commissions' => $commissions,
             'page' => $page,
             'totalPages' => $totalPages
@@ -258,12 +258,12 @@ class PenjualanController extends BaseController {
         $perPage = ITEMS_PER_PAGE;
         $offset = ($page - 1) * $perPage;
 
-        $total = fetchRow("SELECT COUNT(*) as count FROM promos")['count'];
+        $total = (fetchRow("SELECT COUNT(*) as count FROM promos") ?? [])['count'] ?? 0;
         $totalPages = ceil($total / $perPage);
 
         $promos = fetchAll("SELECT * FROM promos ORDER BY created_at DESC LIMIT ? OFFSET ?", [$perPage, $offset], 'ii');
 
-        $this->render(__DIR__ . '/../views/penjualan/promos.php', [
+        $this->render('penjualan/promos', [
             'promos' => $promos,
             'page' => $page,
             'totalPages' => $totalPages
@@ -273,7 +273,7 @@ class PenjualanController extends BaseController {
     public function createPromo() {
         // $this->ensureLoginAndRole(['admin', 'pengurus']); // DISABLED for development
 
-        $this->render(__DIR__ . '/../views/penjualan/create_promo.php');
+        $this->render('penjualan/create_promo');
     }
 
     public function storePromo() {
@@ -309,7 +309,7 @@ class PenjualanController extends BaseController {
             flashMessage('error', 'Data penjualan tidak ditemukan');
             redirect('penjualan');
         }
-        $this->render(__DIR__ . '/../views/penjualan/edit.php', ['penjualan' => $penjualan]);
+        $this->render('penjualan/edit', ['penjualan' => $penjualan]);
     }
 
     public function update($id) {
@@ -351,7 +351,7 @@ class PenjualanController extends BaseController {
 
         $details = fetchAll("SELECT dp.*, pr.nama_produk, pr.kode_produk FROM detail_penjualan dp LEFT JOIN produk pr ON dp.produk_id = pr.id WHERE dp.penjualan_id = ?", [$id], 'i');
 
-        $this->render(__DIR__ . '/../views/penjualan/detail.php', [
+        $this->render('penjualan/detail', [
             'penjualan' => $penjualan,
             'details' => $details
         ]);

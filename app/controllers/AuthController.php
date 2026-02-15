@@ -1,10 +1,12 @@
 <?php
 /**
  * Authentication Controller
- * Handles login, logout, and session management
+ * Handles user login, logout, and registration
  */
 
-class AuthController {
+require_once __DIR__ . '/BaseController.php';
+
+class AuthController extends BaseController {
     
     public function login() {
         if (isLoggedIn()) {
@@ -14,7 +16,8 @@ class AuthController {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $this->authenticate();
         } else {
-            require_once __DIR__ . '/../views/auth/login.php';
+            // Use simple layout without sidenav for login
+            $this->render('auth/login', [], false);
         }
     }
     
@@ -77,7 +80,8 @@ class AuthController {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $this->store();
         } else {
-            require_once __DIR__ . '/../views/auth/register.php';
+            // Use simple layout without sidenav for register
+            $this->render('auth/register', [], false);
         }
     }
 
@@ -128,7 +132,7 @@ class AuthController {
             $stmt->close();
             
             // Assign member role
-            $member_role_id = fetchRow("SELECT id FROM roles WHERE name = 'member'")['id'];
+            $member_role_id = (fetchRow("SELECT id FROM roles WHERE name = 'member'") ?? [])['id'] ?? 0;
             if ($member_role_id) {
                 $stmt = $conn->prepare("INSERT INTO user_roles (user_id, role_id, assigned_by) VALUES (?, ?, ?)");
                 $stmt->bind_param('iii', $user_id, $member_role_id, $user_id);

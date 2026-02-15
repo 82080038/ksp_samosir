@@ -255,7 +255,7 @@ class PredictiveAnalytics {
             LEFT JOIN loan_payments lp ON p.id = lp.loan_id
             WHERE p.status = 'aktif'
             GROUP BY p.id, a.id, a.nama_lengkap, a.tanggal_gabung, s.total_savings, ph.on_time_rate
-        ", [], '');
+        ", [], '') ?? [];
     }
 
     private function getActiveMembersWithFeatures() {
@@ -281,7 +281,7 @@ class PredictiveAnalytics {
             LEFT JOIN loan_payments lp ON p.id = lp.loan_id
             WHERE a.status = 'aktif'
             GROUP BY a.id
-        ", [], '');
+        ", [], '') ?? [];
     }
 
     private function classifyRiskLevel($riskScore) {
@@ -311,7 +311,7 @@ class PredictiveAnalytics {
             AND created_at >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
             GROUP BY DATE_FORMAT(created_at, '%Y-%m')
             ORDER BY month
-        ", [], '');
+        ", [], '') ?? [];
     }
 
     private function calculateGrowthRate($historicalData) {

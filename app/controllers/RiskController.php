@@ -16,7 +16,7 @@ class RiskController extends BaseController {
         $recent_alerts = $this->getRecentAlerts();
         $compliance_status = $this->getComplianceStatus();
 
-        $this->render(__DIR__ . '/../views/risk/index.php', [
+        $this->render('risk/index', [
             'risk_stats' => $risk_stats,
             'recent_alerts' => $recent_alerts,
             'compliance_status' => $compliance_status
@@ -39,12 +39,12 @@ class RiskController extends BaseController {
         $perPage = ITEMS_PER_PAGE;
         $offset = ($page - 1) * $perPage;
 
-        $total = fetchRow("SELECT COUNT(*) as count FROM risk_alerts WHERE type = 'transaction'")['count'];
+        $total = (fetchRow("SELECT COUNT(*) as count FROM risk_alerts WHERE type = 'transaction'") ?? [])['count'] ?? 0;
         $totalPages = ceil($total / $perPage);
 
         $alerts = fetchAll("SELECT ra.*, u.full_name as user_name FROM risk_alerts ra LEFT JOIN users u ON ra.user_id = u.id WHERE ra.type = 'transaction' ORDER BY ra.created_at DESC LIMIT ? OFFSET ?", [$perPage, $offset], 'ii');
 
-        $this->render(__DIR__ . '/../views/risk/transactions.php', [
+        $this->render('risk/transactions', [
             'alerts' => $alerts,
             'page' => $page,
             'totalPages' => $totalPages
@@ -65,7 +65,7 @@ class RiskController extends BaseController {
             'data_backup_regular' => $this->checkDataBackupRegularity()
         ];
 
-        $this->render(__DIR__ . '/../views/risk/compliance.php', [
+        $this->render('risk/compliance', [
             'compliance_checks' => $compliance_checks
         ]);
     }
@@ -82,7 +82,7 @@ class RiskController extends BaseController {
         // Generate PDF report (placeholder)
         flashMessage('info', 'Laporan compliance akan dihasilkan dalam format PDF (placeholder)');
 
-        $this->render(__DIR__ . '/../views/risk/compliance_report.php', [
+        $this->render('risk/compliance_report', [
             'report_date' => $report_date,
             'compliance_data' => $compliance_data
         ]);
@@ -98,7 +98,7 @@ class RiskController extends BaseController {
         $suspicious_transactions = $this->detectFraudulentTransactions();
         $unusual_patterns = $this->detectUnusualPatterns();
 
-        $this->render(__DIR__ . '/../views/risk/fraud_detection.php', [
+        $this->render('risk/fraud_detection', [
             'suspicious_transactions' => $suspicious_transactions,
             'unusual_patterns' => $unusual_patterns
         ]);
@@ -132,10 +132,10 @@ class RiskController extends BaseController {
             $member['risk_level'] = $this->getRiskLevel($member['risk_score']);
         }
 
-        $total = fetchRow("SELECT COUNT(*) as count FROM anggota")['count'];
+        $total = (fetchRow("SELECT COUNT(*) as count FROM anggota") ?? [])['count'] ?? 0;
         $totalPages = ceil($total / $perPage);
 
-        $this->render(__DIR__ . '/../views/risk/member_risk.php', [
+        $this->render('risk/member_risk', [
             'members' => $members,
             'page' => $page,
             'totalPages' => $totalPages
@@ -206,13 +206,16 @@ class RiskController extends BaseController {
      * Get risk statistics.
      */
     private function getRiskStats() {
-        $stats = [];
-
-        $stats['total_alerts'] = fetchRow("SELECT COUNT(*) as total FROM risk_alerts WHERE status = 'active'")['total'];
-        $stats['high_severity_alerts'] = fetchRow("SELECT COUNT(*) as total FROM risk_alerts WHERE severity = 'high' AND status = 'active'")['total'];
-        $stats['overdue_invoices'] = fetchRow("SELECT COUNT(*) as total FROM customer_invoices WHERE status = 'unpaid' AND due_date < CURDATE()")['total'];
-        $stats['high_risk_members'] = fetchRow("SELECT COUNT(*) as total FROM anggota WHERE status = 'aktif' AND id IN (SELECT DISTINCT customer_id FROM returns WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) GROUP BY customer_id HAVING COUNT(*) > 2)")['total'];
-
+        try {
+            $stats = [
+                'total_alerts' => (fetchRow("SELECT COUNT(*) as total FROM risk_alerts WHERE status = 'active'") ?? [])['total'] ?? 0,
+                'high_severity_alerts' => (fetchRow("SELECT COUNT(*) as total FROM risk_alerts WHERE severity = 'high' AND status = 'active'") ?? [])['total'] ?? 0,
+                'overdue_invoices' => (fetchRow("SELECT COUNT(*) as total FROM customer_invoices WHERE status = 'unpaid' AND due_date < CURDATE()") ?? [])['total'] ?? 0,
+                'high_risk_members' => (fetchRow("SELECT COUNT(*) as total FROM anggota WHERE status = 'aktif' AND id IN (SELECT DISTINCT customer_id FROM returns WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) GROUP BY customer_id HAVING COUNT(*) > 2)") ?? [])['total'] ?? 0,
+            ];
+        } catch (Exception $e) {
+            $stats = ['total_alerts' => 0, 'high_severity_alerts' => 0, 'overdue_invoices' => 0, 'high_risk_members' => 0];
+        }
         return $stats;
     }
 
@@ -220,7 +223,7 @@ class RiskController extends BaseController {
      * Get recent risk alerts.
      */
     private function getRecentAlerts() {
-        return fetchAll("SELECT ra.*, u.full_name as created_by_name FROM risk_alerts ra LEFT JOIN users u ON ra.created_by = u.id WHERE ra.status = 'active' ORDER BY ra.created_at DESC LIMIT 10");
+        return fetchAll("SELECT ra.*, u.full_name as created_by_name FROM risk_alerts ra LEFT JOIN users u ON ra.created_by = u.id WHERE ra.status = 'active' ORDER BY ra.created_at DESC LIMIT 10") ?? [];
     }
 
     /**
@@ -240,69 +243,84 @@ class RiskController extends BaseController {
      * Check member data completeness.
      */
     private function checkMemberDataCompleteness() {
-        $total_members = fetchRow("SELECT COUNT(*) as total FROM anggota")['total'];
-        $complete_members = fetchRow("SELECT COUNT(*) as total FROM anggota WHERE nama_lengkap IS NOT NULL AND nik IS NOT NULL AND alamat IS NOT NULL")['total'];
-
-        return [
-            'status' => $complete_members / $total_members >= 0.95 ? 'compliant' : 'warning',
-            'percentage' => round(($complete_members / $total_members) * 100, 1),
-            'message' => "Data lengkap: {$complete_members}/{$total_members} anggota"
-        ];
+        try {
+            $total_members = (fetchRow("SELECT COUNT(*) as total FROM anggota") ?? [])['total'] ?? 0;
+            $complete_members = (fetchRow("SELECT COUNT(*) as total FROM anggota WHERE nama_lengkap IS NOT NULL AND nik IS NOT NULL AND alamat IS NOT NULL") ?? [])['total'] ?? 0;
+            $pct = $total_members > 0 ? round(($complete_members / $total_members) * 100, 1) : 0;
+            return [
+                'status' => $total_members > 0 && $complete_members / $total_members >= 0.95 ? 'compliant' : 'warning',
+                'percentage' => $pct,
+                'message' => "Data lengkap: {$complete_members}/{$total_members} anggota"
+            ];
+        } catch (Exception $e) {
+            return ['status' => 'warning', 'percentage' => 0, 'message' => 'Data tidak tersedia'];
+        }
     }
 
     /**
      * Check financial records accuracy.
      */
     private function checkFinancialRecordsAccuracy() {
-        // Simple check: ensure no negative balances
-        $negative_accounts = fetchRow("SELECT COUNT(*) as total FROM coa WHERE saldo < 0")['total'];
-
-        return [
-            'status' => $negative_accounts == 0 ? 'compliant' : 'error',
-            'issues' => $negative_accounts,
-            'message' => $negative_accounts == 0 ? 'Tidak ada saldo negatif' : "Ditemukan {$negative_accounts} rekening dengan saldo negatif"
-        ];
+        try {
+            $negative_accounts = (fetchRow("SELECT COUNT(*) as total FROM coa WHERE saldo < 0") ?? [])['total'] ?? 0;
+            return [
+                'status' => $negative_accounts == 0 ? 'compliant' : 'error',
+                'issues' => $negative_accounts,
+                'message' => $negative_accounts == 0 ? 'Tidak ada saldo negatif' : "Ditemukan {$negative_accounts} rekening dengan saldo negatif"
+            ];
+        } catch (Exception $e) {
+            return ['status' => 'warning', 'issues' => 0, 'message' => 'Data tidak tersedia'];
+        }
     }
 
     /**
      * Check regulatory compliance.
      */
     private function checkRegulatoryCompliance() {
-        // Placeholder checks
-        $active_members = fetchRow("SELECT COUNT(*) as total FROM anggota WHERE status = 'aktif'")['total'];
-
-        return [
-            'status' => $active_members > 0 ? 'compliant' : 'warning',
-            'members' => $active_members,
-            'message' => "Koperasi memiliki {$active_members} anggota aktif"
-        ];
+        try {
+            $active_members = (fetchRow("SELECT COUNT(*) as total FROM anggota WHERE status = 'aktif'") ?? [])['total'] ?? 0;
+            return [
+                'status' => $active_members > 0 ? 'compliant' : 'warning',
+                'members' => $active_members,
+                'message' => "Koperasi memiliki {$active_members} anggota aktif"
+            ];
+        } catch (Exception $e) {
+            return ['status' => 'warning', 'members' => 0, 'message' => 'Data tidak tersedia'];
+        }
     }
 
     /**
      * Check audit trail completeness.
      */
     private function checkAuditTrailCompleteness() {
-        $total_actions = fetchRow("SELECT COUNT(*) as total FROM logs WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)")['total'];
-
-        return [
-            'status' => $total_actions > 0 ? 'compliant' : 'warning',
-            'actions_logged' => $total_actions,
-            'message' => "Audit trail lengkap dengan {$total_actions} aktivitas tercatat"
-        ];
+        try {
+            $total_actions = (fetchRow("SELECT COUNT(*) as total FROM logs WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)") ?? [])['total'] ?? 0;
+            return [
+                'status' => $total_actions > 0 ? 'compliant' : 'warning',
+                'actions_logged' => $total_actions,
+                'message' => "Audit trail lengkap dengan {$total_actions} aktivitas tercatat"
+            ];
+        } catch (Exception $e) {
+            return ['status' => 'warning', 'actions_logged' => 0, 'message' => 'Data tidak tersedia'];
+        }
     }
 
     /**
      * Check data backup regularity.
      */
     private function checkDataBackupRegularity() {
-        $last_backup = fetchRow("SELECT created_at FROM backup_files ORDER BY created_at DESC LIMIT 1")['created_at'];
-        $days_since_backup = $last_backup ? (time() - strtotime($last_backup)) / (60 * 60 * 24) : 999;
-
-        return [
-            'status' => $days_since_backup <= 7 ? 'compliant' : 'warning',
-            'days_since_backup' => round($days_since_backup),
-            'message' => $days_since_backup <= 7 ? 'Backup teratur dilakukan' : "Backup terakhir {$days_since_backup} hari yang lalu"
-        ];
+        try {
+            $row = fetchRow("SELECT created_at FROM backup_files ORDER BY created_at DESC LIMIT 1");
+            $last_backup = $row['created_at'] ?? null;
+            $days_since_backup = $last_backup ? (time() - strtotime($last_backup)) / (60 * 60 * 24) : 999;
+            return [
+                'status' => $days_since_backup <= 7 ? 'compliant' : 'warning',
+                'days_since_backup' => round($days_since_backup),
+                'message' => $days_since_backup <= 7 ? 'Backup teratur dilakukan' : 'Backup terakhir ' . round($days_since_backup) . ' hari yang lalu'
+            ];
+        } catch (Exception $e) {
+            return ['status' => 'warning', 'days_since_backup' => 999, 'message' => 'Data backup tidak tersedia'];
+        }
     }
 
     /**
@@ -336,7 +354,7 @@ class RiskController extends BaseController {
      */
     private function detectFraudulentTransactions() {
         // Placeholder fraud detection logic
-        return fetchAll("SELECT p.id, p.total_harga, u.full_name, p.created_at FROM penjualan p LEFT JOIN users u ON p.pelanggan_id = u.id WHERE p.total_harga > 50000000 AND p.created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY) ORDER BY p.total_harga DESC LIMIT 5");
+        return fetchAll("SELECT p.id, p.total_harga, u.full_name, p.created_at FROM penjualan p LEFT JOIN users u ON p.pelanggan_id = u.id WHERE p.total_harga > 50000000 AND p.created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY) ORDER BY p.total_harga DESC LIMIT 5") ?? [];
     }
 
     /**

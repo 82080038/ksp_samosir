@@ -1,4 +1,53 @@
+DirectorySlash Off
 RewriteEngine On
+
+# Security headers
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options nosniff
+    Header always set X-Frame-Options DENY
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# Block access to sensitive files
+<FilesMatch "\.(htaccess|htpasswd|ini|log|sh|sql|bak|backup|old)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# Allow access to Front Controller
+<Files "FrontController.php">
+    Order Allow,Deny
+    Allow from all
+</Files>
+
+# Force app routes that conflict with directory names to go through index.php
+RewriteRule ^(logs|cache|database|migration|tests|scripts|templates|sql|plan|docs)$ index.php [QSA,L]
+
+# Block access to app directories and raw file system directories
+<IfModule mod_rewrite.c>
+    RewriteRule ^(app/config|app/helpers)/ - [F,L]
+    RewriteRule ^(logs|cache|database|migration|tests|scripts|sql)/(.+) - [F,L]
+    # Allow access to app/core/FrontController.php
+    RewriteRule ^app/core/FrontController\.php$ - [L]
+</IfModule>
+
+# Clean URL routing - Main Router (index.php)
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)$ index.php [QSA,L]
+
+# Handle specific routes
+RewriteRule ^api/(.*)$ app/core/FrontController.php [QSA,L]
+
+# Default index redirect
+RewriteRule ^$ index.php [QSA,L]
+
+# PHP settings
+<IfModule mod_php.c>
+    php_flag display_errors Off
+    php_value max_execution_time 300
+    php_value memory_limit 256M
+    php_value upload_max_filesize 10M
+    php_value post_max_size 10M
+</IfModule>

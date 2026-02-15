@@ -32,7 +32,7 @@ class LogsController extends BaseController {
         $sql .= " ORDER BY l.created_at DESC LIMIT 100"; // basic pagination
         $logs = fetchAll($sql, $params, $types);
 
-        $this->render(__DIR__ . '/../views/logs/index.php', [
+        $this->render('logs/index', [
             'logs' => $logs,
             'filter_action' => $filter_action,
             'filter_table' => $filter_table,

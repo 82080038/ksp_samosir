@@ -327,7 +327,7 @@ class SupplyChainManager {
             FROM purchase_orders
             WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
             GROUP BY status
-        ", [], '');
+        ", [], '') ?? [];
     }
 
     private function getVendorPerformance() {
@@ -342,7 +342,7 @@ class SupplyChainManager {
             WHERE sp.evaluation_date >= DATE_SUB(NOW(), INTERVAL 90 DAY)
             ORDER BY sp.overall_score DESC
             LIMIT 10
-        ", [], '');
+        ", [], '') ?? [];
     }
 
     private function getQualityMetrics() {
@@ -368,7 +368,7 @@ class SupplyChainManager {
             FROM shipments
             WHERE shipment_date >= DATE_SUB(NOW(), INTERVAL 30 DAY)
             GROUP BY status
-        ", [], '');
+        ", [], '') ?? [];
     }
 
     private function getDemandForecast() {
@@ -383,7 +383,7 @@ class SupplyChainManager {
             WHERE df.forecast_date >= CURDATE()
             ORDER BY df.confidence_level DESC
             LIMIT 5
-        ", [], '');
+        ", [], '') ?? [];
     }
 
     private function getSupplyChainAlerts() {
@@ -392,7 +392,7 @@ class SupplyChainManager {
             WHERE acknowledged = FALSE
             ORDER BY severity DESC, created_at DESC
             LIMIT 10
-        ", [], '');
+        ", [], '') ?? [];
     }
 
     private function identifyStockouts() {
@@ -407,7 +407,7 @@ class SupplyChainManager {
             LEFT JOIN replenishment_rules rr ON ii.product_id = rr.product_id
             WHERE ii.quantity_available <= COALESCE(rr.reorder_point, 0)
             ORDER BY ii.quantity_available ASC
-        ", [], '');
+        ", [], '') ?? [];
     }
 
     private function identifyOverstock() {
@@ -422,7 +422,7 @@ class SupplyChainManager {
             JOIN replenishment_rules rr ON ii.product_id = rr.product_id
             WHERE ii.quantity_available > rr.max_stock_level
             ORDER BY overstock_quantity DESC
-        ", [], '');
+        ", [], '') ?? [];
     }
 
     private function identifySlowMovingInventory() {
@@ -438,7 +438,7 @@ class SupplyChainManager {
             GROUP BY ii.id, p.nama_produk, ii.quantity_available
             HAVING days_since_movement > 90
             ORDER BY days_since_movement DESC
-        ", [], '');
+        ", [], '') ?? [];
     }
 
     private function calculateReplenishmentNeeds() {
@@ -455,7 +455,7 @@ class SupplyChainManager {
             LEFT JOIN vendors v ON rr.supplier_priority->>'$.primary' = v.id
             WHERE ii.quantity_available <= rr.reorder_point
             AND rr.auto_reorder_enabled = TRUE
-        ", [], '');
+        ", [], '') ?? [];
     }
 
     private function calculateVendorScore($vendor) {
@@ -556,7 +556,7 @@ class SupplyChainManager {
             AND p.created_at >= DATE_SUB(NOW(), INTERVAL ? MONTH)
             GROUP BY DATE_FORMAT(created_at, '%Y-%m')
             ORDER BY month
-        ", [$productId, $months], 'ii');
+        ", [$productId, $months], 'ii') ?? [];
     }
 
     private function calculateMovingAverage($data, $periods) {

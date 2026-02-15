@@ -397,7 +397,7 @@ class KPIManager {
 
     // Data retrieval methods
     private function getTotalActiveMembers() {
-        return fetchRow("SELECT COUNT(*) as count FROM anggota WHERE status = 'aktif'")['count'];
+        return (fetchRow("SELECT COUNT(*) as count FROM anggota WHERE status = 'aktif'") ?? [])['count'] ?? 0;
     }
 
     private function getMemberGrowthRate() {

@@ -1,5 +1,132 @@
+<?php
+// Use centralized dependency management
+require_once __DIR__ . '/../../../app/helpers/DependencyManager.php';
+
+// Initialize view with all dependencies
+$pageInfo = initView();
+$user = getCurrentUser();
+$role = $user['role'] ?? null;
+?>
+
+
+
+<!-- Page Header with Dynamic Title -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom" id="page-header">
+    <h1 class="h2 page-title" id="page-title" style="color: black;" data-page="penjualan-commissions">Komisi</h1>
+    <div class="btn-toolbar mb-2 mb-md-0" id="page-actions">
+        <div class="btn-group me-2">
+                <a href="penjualan" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Kembali
+                </a>
+            </div>
+    </div>
+</div>
+
+<!-- Flash Messages -->
+<?php if ($error = getFlashMessage('error')): ?>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        <?= $error ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
+
+<?php if ($success = getFlashMessage('success')): ?>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-2"></i>
+        <?= $success ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
+
+
+
+
+
+<!-- Flash Messages -->
+<?php if ($error = getFlashMessage('error')): ?>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        <?= $error ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
+
+<?php if ($success = getFlashMessage('success')): ?>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-2"></i>
+        <?= $success ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
+
+<?php
+// Use centralized dependency management
+require_once __DIR__ . '/../../../app/helpers/DependencyManager.php';
+
+// Initialize view with all dependencies
+$pageInfo = initView();
+$user = getCurrentUser();
+$role = $user['role'] ?? null;
+?>
+
+
+
+</div>
+
+<!-- Page Header with Dynamic Title -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom" id="page-header">
+    <h1 class="h2 page-title" id="page-title" style="color: black;" data-page="penjualan-commissions">Komisi</h1>
+    <div class="btn-toolbar mb-2 mb-md-0" id="page-actions">
+        <div class="btn-group me-2">
+                <a href="penjualan" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Kembali
+                </a>
+            </div>
+    </div>
+</div>
+
+<!-- Flash Messages -->
+<?php if ($error = getFlashMessage('error')): ?>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        <?= $error ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
+
+<?php if ($success = getFlashMessage('success')): ?>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-2"></i>
+        <?= $success ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
+
+
+
+
+
+
+<!-- Flash Messages -->
+<?php if ($error = getFlashMessage("error")): ?>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        <?= $error ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
+
+<?php if ($success = getFlashMessage("success")): ?>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-2"></i>
+        <?= $success ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
+
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>Komisi Agen</h2>
+    
     <div class="btn-group">
         <a href="<?= base_url('penjualan/agentSales') ?>" class="btn btn-outline-secondary btn-sm">Kembali ke Penjualan Agen</a>
     </div>
@@ -91,7 +218,7 @@
     <div class="col-md-4">
         <div class="card">
             <div class="card-body text-center">
-                <h6>Total Komisi</h6>
+                
                 <h4 class="text-primary">
                     <?php
                     $total_commissions = count($commissions);
@@ -104,7 +231,7 @@
     <div class="col-md-4">
         <div class="card">
             <div class="card-body text-center">
-                <h6>Total Nilai Komisi</h6>
+                
                 <h4 class="text-info">
                     Rp <?php
                     $total_commission_value = array_sum(array_column($commissions, 'total_komisi'));
@@ -117,7 +244,7 @@
     <div class="col-md-4">
         <div class="card">
             <div class="card-body text-center">
-                <h6>Komisi Belum Dibayar</h6>
+                
                 <h4 class="text-warning">
                     <?php
                     $unpaid = count(array_filter($commissions, function($comm) { return $comm['status_pembayaran'] === 'belum_bayar'; }));
@@ -140,7 +267,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Detail Komisi</h5>
+                
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" id="commissionContent">
@@ -163,3 +290,71 @@ function payCommission(id) {
     }
 }
 </script>
+
+
+</div>
+
+<!-- JavaScript for DOM Manipulation -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Page penjualan - commissions initialized');
+    
+    // Update page title dynamically
+    if (typeof updatePageTitle !== 'undefined') {
+        updatePageTitle('Komisi', 'penjualan-commissions');
+    }
+});
+
+// Global functions
+function savePenjualan() {
+    const form = document.querySelector('form');
+    if (form) {
+        form.dispatchEvent(new Event('submit'));
+    }
+}
+</script>
+
+<style>
+/* Page-specific styles */
+.page-title {
+    font-weight: 700;
+}
+
+.main-content {
+    min-height: 400px;
+}
+</style>
+
+
+</div>
+
+<!-- JavaScript for DOM Manipulation -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Page penjualan - commissions initialized');
+    
+    // Update page title dynamically
+    if (typeof updatePageTitle !== 'undefined') {
+        updatePageTitle('Komisi', 'penjualan-commissions');
+    }
+});
+
+// Global functions
+function savePenjualan() {
+    const form = document.querySelector('form');
+    if (form) {
+        form.dispatchEvent(new Event('submit'));
+    }
+}
+</script>
+
+<style>
+/* Page-specific styles */
+.page-title {
+    font-weight: 700;
+}
+
+.main-content {
+    min-height: 400px;
+}
+</style>

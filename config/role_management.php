@@ -171,7 +171,7 @@ function requireModuleAccess($module) {
  * Get all available roles
  */
 function getAllRoles() {
-    return fetchAll("SELECT * FROM roles WHERE is_active = 1 ORDER BY name");
+    return fetchAll("SELECT * FROM roles WHERE is_active = 1 ORDER BY name") ?? [];
 }
 
 /**
@@ -183,7 +183,7 @@ function getRolePermissions($roleId) {
             JOIN permissions p ON rp.permission_id = p.id 
             WHERE rp.role_id = ? AND p.is_active = 1";
     
-    return fetchAll($sql, [$roleId], 'i');
+    return fetchAll($sql, [$roleId], 'i') ?? [];
 }
 
 /**
@@ -221,4 +221,3 @@ function removeRoleFromUser($userId, $roleId) {
     $sql = "DELETE FROM user_roles WHERE user_id = ? AND role_id = ?";
     return executeNonQuery($sql, [$userId, $roleId], 'ii');
 }
-?>

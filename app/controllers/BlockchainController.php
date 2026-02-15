@@ -16,7 +16,7 @@ class BlockchainController extends BaseController {
         $recent_blocks = $this->getRecentBlocks();
         $verification_status = $this->getVerificationStatus();
 
-        $this->render(__DIR__ . '/../views/blockchain/index.php', [
+        $this->render('blockchain/index', [
             'stats' => $stats,
             'recent_blocks' => $recent_blocks,
             'verification_status' => $verification_status
@@ -63,7 +63,7 @@ class BlockchainController extends BaseController {
      */
     public function recordGovernanceDecision() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            $this->render(__DIR__ . '/../views/blockchain/record_decision.php');
+            $this->render('blockchain/record_decision');
             return;
         }
 
@@ -131,7 +131,7 @@ class BlockchainController extends BaseController {
             }
         }
 
-        $this->render(__DIR__ . '/../views/blockchain/verification.php', [
+        $this->render('blockchain/verification', [
             'verification_results' => $verification_results,
             'chain_valid' => !in_array(false, array_column($verification_results, 'is_valid'))
         ]);
@@ -147,7 +147,8 @@ class BlockchainController extends BaseController {
         $perPage = ITEMS_PER_PAGE;
         $offset = ($page - 1) * $perPage;
 
-        $total = fetchRow("SELECT COUNT(*) as count FROM blockchain_blocks WHERE block_type IN ('sale', 'payment', 'loan', 'savings')")['count'];
+        $totalResult = fetchRow("SELECT COUNT(*) as count FROM blockchain_blocks WHERE block_type IN ('sale', 'payment', 'loan', 'savings')");
+        $total = $totalResult['count'] ?? 0;
         $totalPages = ceil($total / $perPage);
 
         $blocks = fetchAll("SELECT bb.*, u.full_name as recorded_by_name FROM blockchain_blocks bb LEFT JOIN users u ON bb.recorded_by = u.id WHERE bb.block_type IN ('sale', 'payment', 'loan', 'savings') ORDER BY bb.created_at DESC LIMIT ? OFFSET ?", [$perPage, $offset], 'ii');
@@ -157,7 +158,7 @@ class BlockchainController extends BaseController {
             $block['decoded_data'] = json_decode($block['block_data'], true);
         }
 
-        $this->render(__DIR__ . '/../views/blockchain/transaction_history.php', [
+        $this->render('blockchain/transaction_history', [
             'blocks' => $blocks,
             'page' => $page,
             'totalPages' => $totalPages
@@ -173,13 +174,13 @@ class BlockchainController extends BaseController {
         $period = $_GET['period'] ?? date('Y-m');
 
         $report_data = [
-            'total_blocks' => fetchRow("SELECT COUNT(*) as total FROM blockchain_blocks WHERE DATE_FORMAT(created_at, '%Y-%m') = ?", [$period], 's')['total'],
+            'total_blocks' => fetchRow("SELECT COUNT(*) as total FROM blockchain_blocks WHERE DATE_FORMAT(created_at, '%Y-%m') = ?", [$period], 's')['total'] ?? 0,
             'blocks_by_type' => fetchAll("SELECT block_type, COUNT(*) as count FROM blockchain_blocks WHERE DATE_FORMAT(created_at, '%Y-%m') = ? GROUP BY block_type", [$period], 's'),
             'chain_integrity' => $this->verifyChainIntegrity(),
             'governance_decisions' => fetchAll("SELECT bb.*, u.full_name FROM blockchain_blocks bb LEFT JOIN users u ON bb.recorded_by = u.id WHERE bb.block_type = 'governance' AND DATE_FORMAT(bb.created_at, '%Y-%m') = ? ORDER BY bb.created_at DESC", [$period], 's')
         ];
 
-        $this->render(__DIR__ . '/../views/blockchain/transparency_report.php', [
+        $this->render('blockchain/transparency_report', [
             'report_data' => $report_data,
             'period' => $period
         ]);
@@ -203,7 +204,7 @@ class BlockchainController extends BaseController {
         // Get verification status
         $verification = $this->verifyBlockIntegrity($block_id);
 
-        $this->render(__DIR__ . '/../views/blockchain/block_detail.php', [
+        $this->render('blockchain/block_detail', [
             'block' => $block,
             'verification' => $verification
         ]);
@@ -215,9 +216,9 @@ class BlockchainController extends BaseController {
     private function getTransparencyStats() {
         $stats = [];
 
-        $stats['total_blocks'] = fetchRow("SELECT COUNT(*) as total FROM blockchain_blocks")['total'];
-        $stats['blocks_this_month'] = fetchRow("SELECT COUNT(*) as total FROM blockchain_blocks WHERE MONTH(created_at) = MONTH(CURRENT_DATE) AND YEAR(created_at) = YEAR(CURRENT_DATE)")['total'];
-        $stats['governance_decisions'] = fetchRow("SELECT COUNT(*) as total FROM blockchain_blocks WHERE block_type = 'governance'")['total'];
+        $stats['total_blocks'] = fetchRow("SELECT COUNT(*) as total FROM blockchain_blocks")['total'] ?? 0;
+        $stats['blocks_this_month'] = fetchRow("SELECT COUNT(*) as total FROM blockchain_blocks WHERE MONTH(created_at) = MONTH(CURRENT_DATE) AND YEAR(created_at) = YEAR(CURRENT_DATE)")['total'] ?? 0;
+        $stats['governance_decisions'] = fetchRow("SELECT COUNT(*) as total FROM blockchain_blocks WHERE block_type = 'governance'")['total'] ?? 0;
         $stats['chain_integrity'] = $this->verifyChainIntegrity() ? 'Valid' : 'Invalid';
 
         return $stats;
@@ -242,7 +243,8 @@ class BlockchainController extends BaseController {
      * Get verification status.
      */
     private function getVerificationStatus() {
-        $total_blocks = fetchRow("SELECT COUNT(*) as total FROM blockchain_blocks")['total'];
+        $totalBlocksResult = fetchRow("SELECT COUNT(*) as total FROM blockchain_blocks");
+        $total_blocks = $totalBlocksResult['total'] ?? 0;
         $verified_blocks = 0;
 
         if ($total_blocks > 0) {

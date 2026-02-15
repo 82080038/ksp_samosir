@@ -1,14 +1,39 @@
+<?php
+// Dependency management
+if (!function_exists('initView')) {
+    require_once __DIR__ . '/../../../app/helpers/DependencyManager.php';
+}
+if (!function_exists('getCurrentUser')) {
+    require_once __DIR__ . '/../../../config/config.php';
+}
+$pageInfo = $pageInfo ?? (function_exists('initView') ? initView() : []);
+$user = $user ?? (function_exists('getCurrentUser') ? getCurrentUser() : []);
+$role = $role ?? ($user['role'] ?? 'admin');
+?>
+
+<!-- Page Header -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom" id="page-header">
+    <h1 class="h2 page-title" id="page-title" style="color: black;" data-page="monitoring-advanced">Advanced Monitoring</h1>
+    <div class="btn-toolbar mb-2 mb-md-0" id="page-actions">
+        <div class="btn-group me-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="location.reload()">
+                <i class="bi bi-arrow-clockwise"></i> Refresh
+            </button>
+        </div>
+    </div>
+</div>
+
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <h2><i class="bi bi-graph-up text-primary me-2"></i>Advanced Monitoring Dashboard</h2>
-        <p class="text-muted mb-0">Real-time analytics with AI-powered insights</p>
+        <h2><i class="bi bi-graph-up text-primary me-2"></i>Dashboard Monitoring Lanjutan</h2>
+        <p class="text-muted mb-0">Analitik real-time dengan wawasan bertenaga AI</p>
     </div>
     <div class="btn-group">
         <button class="btn btn-outline-primary btn-sm" onclick="refreshDashboard()">
-            <i class="bi bi-arrow-clockwise"></i> Refresh
+            <i class="bi bi-arrow-clockwise"></i> Segarkan
         </button>
         <button class="btn btn-outline-secondary btn-sm" onclick="exportDashboard()">
-            <i class="bi bi-download"></i> Export
+            <i class="bi bi-download"></i> Ekspor
         </button>
     </div>
 </div>

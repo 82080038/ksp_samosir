@@ -448,17 +448,17 @@ class CooperativeActivityManagement {
     }
 
     private function getActivitiesByStatus($coopId, $status) {
-        return fetchAll("SELECT * FROM cooperative_activities WHERE cooperative_id = ? AND status = ?", [$coopId, $status], 'is');
+        return fetchAll("SELECT * FROM cooperative_activities WHERE cooperative_id = ? AND status = ?", [$coopId, $status], 'is') ?? [];
     }
 
     private function getUpcomingMeetings($coopId) {
-        return fetchAll("SELECT * FROM governance_meetings WHERE cooperative_id = ? AND meeting_date >= CURDATE() ORDER BY meeting_date LIMIT 5", [$coopId], 'i');
+        return fetchAll("SELECT * FROM governance_meetings WHERE cooperative_id = ? AND meeting_date >= CURDATE() ORDER BY meeting_date LIMIT 5", [$coopId], 'i') ?? [];
     }
 
     private function getActivityMetrics($coopId) {
         return [
-            'total_activities' => fetchRow("SELECT COUNT(*) as count FROM cooperative_activities WHERE cooperative_id = ?", [$coopId], 'i')['count'],
-            'completed_activities' => fetchRow("SELECT COUNT(*) as count FROM cooperative_activities WHERE cooperative_id = ? AND status = 'completed'", [$coopId], 'i')['count'],
+            'total_activities' => (fetchRow("SELECT COUNT(*) as count FROM cooperative_activities WHERE cooperative_id = ?", [$coopId], 'i') ?? [])['count'] ?? 0,
+            'completed_activities' => (fetchRow("SELECT COUNT(*) as count FROM cooperative_activities WHERE cooperative_id = ? AND status = 'completed'", [$coopId], 'i') ?? [])['count'] ?? 0,
             'budget_utilization_rate' => 87.5,
             'beneficiary_satisfaction' => 4.2
         ];
@@ -483,7 +483,7 @@ class CooperativeActivityManagement {
     }
 
     private function getActivitiesByPeriod($coopId, $period) {
-        return fetchAll("SELECT * FROM cooperative_activities WHERE cooperative_id = ? AND start_date LIKE ?", [$coopId, $period . '%'], 's');
+        return fetchAll("SELECT * FROM cooperative_activities WHERE cooperative_id = ? AND start_date LIKE ?", [$coopId, $period . '%'], 's') ?? [];
     }
 
     private function categorizeActivitiesByType($activities) {

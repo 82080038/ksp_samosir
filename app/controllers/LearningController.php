@@ -16,7 +16,7 @@ class LearningController extends BaseController {
         $recent_courses = $this->getRecentCourses();
         $popular_courses = $this->getPopularCourses();
 
-        $this->render(__DIR__ . '/../views/learning/index.php', [
+        $this->render('learning/index', [
             'stats' => $stats,
             'recent_courses' => $recent_courses,
             'popular_courses' => $popular_courses
@@ -33,12 +33,12 @@ class LearningController extends BaseController {
         $perPage = ITEMS_PER_PAGE;
         $offset = ($page - 1) * $perPage;
 
-        $total = fetchRow("SELECT COUNT(*) as count FROM learning_courses")['count'];
+        $total = (fetchRow("SELECT COUNT(*) as count FROM learning_courses") ?? [])['count'] ?? 0;
         $totalPages = ceil($total / $perPage);
 
         $courses = fetchAll("SELECT lc.*, u.full_name as created_by_name FROM learning_courses lc LEFT JOIN users u ON lc.created_by = u.id ORDER BY lc.created_at DESC LIMIT ? OFFSET ?", [$perPage, $offset], 'ii');
 
-        $this->render(__DIR__ . '/../views/learning/courses.php', [
+        $this->render('learning/courses', [
             'courses' => $courses,
             'page' => $page,
             'totalPages' => $totalPages
@@ -86,7 +86,7 @@ class LearningController extends BaseController {
             redirect('learning/courses');
         }
 
-        $this->render(__DIR__ . '/../views/learning/create_course.php');
+        $this->render('learning/create_course');
     }
 
     /**
@@ -104,7 +104,7 @@ class LearningController extends BaseController {
         $modules = fetchAll("SELECT * FROM course_modules WHERE course_id = ? ORDER BY module_order", [$course_id], 'i');
         $enrollments = fetchAll("SELECT le.*, u.full_name as student_name FROM learning_enrollments le LEFT JOIN users u ON le.student_id = u.id WHERE le.course_id = ?", [$course_id], 'i');
 
-        $this->render(__DIR__ . '/../views/learning/course_detail.php', [
+        $this->render('learning/course_detail', [
             'course' => $course,
             'modules' => $modules,
             'enrollments' => $enrollments
@@ -134,7 +134,7 @@ class LearningController extends BaseController {
         }
 
         // Check max participants
-        $current_enrollments = fetchRow("SELECT COUNT(*) as count FROM learning_enrollments WHERE course_id = ?", [$course_id], 'i')['count'];
+        $current_enrollments = (fetchRow("SELECT COUNT(*) as count FROM learning_enrollments WHERE course_id = ?", [$course_id], 'i') ?? [])['count'] ?? 0;
         if ($course['max_participants'] && $current_enrollments >= $course['max_participants']) {
             flashMessage('error', 'Kursus sudah penuh');
             redirect('learning/courseDetail/' . $course_id);
@@ -177,7 +177,7 @@ class LearningController extends BaseController {
             $enrollment['progress'] = $progress;
         }
 
-        $this->render(__DIR__ . '/../views/learning/my_courses.php', [
+        $this->render('learning/my_courses', [
             'enrollments' => $enrollments
         ]);
     }
@@ -233,7 +233,7 @@ class LearningController extends BaseController {
 
         $progress = $this->getEnrollmentProgress($enrollment_id);
 
-        $this->render(__DIR__ . '/../views/learning/course_learning.php', [
+        $this->render('learning/course_learning', [
             'enrollment' => $enrollment,
             'modules' => $modules,
             'progress' => $progress
@@ -279,7 +279,7 @@ class LearningController extends BaseController {
 
         $certificates = fetchAll("SELECT c.*, lc.title as course_title, lc.course_code FROM certificates c LEFT JOIN learning_enrollments le ON c.enrollment_id = le.id LEFT JOIN learning_courses lc ON le.course_id = lc.id WHERE le.student_id = ? ORDER BY c.issued_date DESC", [$user_id], 'i');
 
-        $this->render(__DIR__ . '/../views/learning/my_certificates.php', [
+        $this->render('learning/my_certificates', [
             'certificates' => $certificates
         ]);
     }
@@ -290,10 +290,10 @@ class LearningController extends BaseController {
     private function getLearningStats() {
         $stats = [];
 
-        $stats['total_courses'] = fetchRow("SELECT COUNT(*) as total FROM learning_courses")['total'];
-        $stats['active_courses'] = fetchRow("SELECT COUNT(*) as total FROM learning_courses WHERE status = 'active'")['total'];
-        $stats['total_enrollments'] = fetchRow("SELECT COUNT(*) as total FROM learning_enrollments")['total'];
-        $stats['total_certificates'] = fetchRow("SELECT COUNT(*) as total FROM certificates")['total'];
+        $stats['total_courses'] = (fetchRow("SELECT COUNT(*) as total FROM learning_courses") ?? [])['total'] ?? 0;
+        $stats['active_courses'] = (fetchRow("SELECT COUNT(*) as total FROM learning_courses WHERE status = 'active'") ?? [])['total'] ?? 0;
+        $stats['total_enrollments'] = (fetchRow("SELECT COUNT(*) as total FROM learning_enrollments") ?? [])['total'] ?? 0;
+        $stats['total_certificates'] = (fetchRow("SELECT COUNT(*) as total FROM certificates") ?? [])['total'] ?? 0;
         $stats['completion_rate'] = $this->calculateCompletionRate();
 
         return $stats;
@@ -303,22 +303,22 @@ class LearningController extends BaseController {
      * Get recent courses.
      */
     private function getRecentCourses() {
-        return fetchAll("SELECT lc.*, u.full_name as created_by_name FROM learning_courses lc LEFT JOIN users u ON lc.created_by = u.id ORDER BY lc.created_at DESC LIMIT 5");
+        return fetchAll("SELECT lc.*, u.full_name as created_by_name FROM learning_courses lc LEFT JOIN users u ON lc.created_by = u.id ORDER BY lc.created_at DESC LIMIT 5") ?? [];
     }
 
     /**
      * Get popular courses.
      */
     private function getPopularCourses() {
-        return fetchAll("SELECT lc.title, lc.category, COUNT(le.id) as enrollment_count FROM learning_courses lc LEFT JOIN learning_enrollments le ON lc.id = le.course_id GROUP BY lc.id ORDER BY enrollment_count DESC LIMIT 5");
+        return fetchAll("SELECT lc.title, lc.category, COUNT(le.id) as enrollment_count FROM learning_courses lc LEFT JOIN learning_enrollments le ON lc.id = le.course_id GROUP BY lc.id ORDER BY enrollment_count DESC LIMIT 5") ?? [];
     }
 
     /**
      * Get enrollment progress.
      */
     private function getEnrollmentProgress($enrollment_id) {
-        $total_modules = fetchRow("SELECT COUNT(*) as total FROM learning_progress WHERE enrollment_id = ?", [$enrollment_id], 'i')['total'];
-        $completed_modules = fetchRow("SELECT COUNT(*) as total FROM learning_progress WHERE enrollment_id = ? AND status = 'completed'", [$enrollment_id], 'i')['total'];
+        $total_modules = (fetchRow("SELECT COUNT(*) as total FROM learning_progress WHERE enrollment_id = ?", [$enrollment_id], 'i') ?? [])['total'] ?? 0;
+        $completed_modules = (fetchRow("SELECT COUNT(*) as total FROM learning_progress WHERE enrollment_id = ? AND status = 'completed'", [$enrollment_id], 'i') ?? [])['total'] ?? 0;
 
         $percentage = $total_modules > 0 ? round(($completed_modules / $total_modules) * 100, 1) : 0;
 
@@ -353,8 +353,8 @@ class LearningController extends BaseController {
      * Calculate completion rate.
      */
     private function calculateCompletionRate() {
-        $completed_enrollments = fetchRow("SELECT COUNT(*) as total FROM learning_enrollments WHERE progress_percentage >= 100")['total'];
-        $total_enrollments = fetchRow("SELECT COUNT(*) as total FROM learning_enrollments")['total'];
+        $completed_enrollments = (fetchRow("SELECT COUNT(*) as total FROM learning_enrollments WHERE progress_percentage >= 100") ?? [])['total'] ?? 0;
+        $total_enrollments = (fetchRow("SELECT COUNT(*) as total FROM learning_enrollments") ?? [])['total'] ?? 0;
 
         return $total_enrollments > 0 ? round(($completed_enrollments / $total_enrollments) * 100, 1) : 0;
     }

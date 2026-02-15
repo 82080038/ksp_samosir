@@ -347,7 +347,7 @@ class RegulatoryReportingSystem {
     }
 
     private function getCooperativeActivities($coopId, $period) {
-        return fetchAll("SELECT * FROM cooperative_activities WHERE cooperative_id = ? AND start_date LIKE ?", [$coopId, $period . '%'], 's');
+        return fetchAll("SELECT * FROM cooperative_activities WHERE cooperative_id = ? AND start_date LIKE ?", [$coopId, $period . '%'], 's') ?? [];
     }
 
     private function summarizeActivitiesByType($activities, $type) {
@@ -369,20 +369,20 @@ class RegulatoryReportingSystem {
 
     private function getReserveFundAllocation($coopId, $period) {
         $year = date('Y', strtotime($period . '-01'));
-        return fetchAll("SELECT * FROM reserve_funds WHERE cooperative_id = ? AND fund_year = ?", [$coopId, $year], 'ii');
+        return fetchAll("SELECT * FROM reserve_funds WHERE cooperative_id = ? AND fund_year = ?", [$coopId, $year], 'ii') ?? [];
     }
 
     private function getEducationFundUtilization($coopId, $period) {
         $year = date('Y', strtotime($period . '-01'));
-        return fetchAll("SELECT * FROM education_fund_utilization WHERE cooperative_id = ? AND utilization_year = ?", [$coopId, $year], 'ii');
+        return fetchAll("SELECT * FROM education_fund_utilization WHERE cooperative_id = ? AND utilization_year = ?", [$coopId, $year], 'ii') ?? [];
     }
 
     private function getGovernanceComposition($coopId) {
-        return fetchAll("SELECT * FROM governance_bodies WHERE cooperative_id = ? AND status = 'active'", [$coopId], 'i');
+        return fetchAll("SELECT * FROM governance_bodies WHERE cooperative_id = ? AND status = 'active'", [$coopId], 'i') ?? [];
     }
 
     private function getTotalActiveMembers($coopId) {
-        return fetchRow("SELECT COUNT(*) as count FROM cooperative_members WHERE cooperative_id = ? AND membership_status = 'active'", [$coopId], 'i')['count'];
+        return (fetchRow("SELECT COUNT(*) as count FROM cooperative_members WHERE cooperative_id = ? AND membership_status = 'active'", [$coopId], 'i') ?? [])['count'] ?? 0;
     }
 
     private function getTotalAssets($coopId) { return 500000000; }
@@ -439,17 +439,17 @@ class RegulatoryReportingSystem {
     }
 
     private function getMonthlyReportingStatus($coopId, $year) {
-        $submitted = fetchRow("SELECT COUNT(*) as count FROM regulatory_reports WHERE cooperative_id = ? AND report_type = 'monthly_financial' AND report_year = ? AND approval_status = 'approved'", [$coopId, $year], 'ii')['count'];
+        $submitted = (fetchRow("SELECT COUNT(*) as count FROM regulatory_reports WHERE cooperative_id = ? AND report_type = 'monthly_financial' AND report_year = ? AND approval_status = 'approved'", [$coopId, $year], 'ii') ?? [])['count'] ?? 0;
         return ['submitted' => $submitted, 'required' => 12, 'compliant' => $submitted >= 12];
     }
 
     private function getAnnualReportingStatus($coopId, $year) {
-        $submitted = fetchRow("SELECT COUNT(*) as count FROM regulatory_reports WHERE cooperative_id = ? AND report_type = 'annual_financial' AND report_year = ? AND approval_status = 'approved'", [$coopId, $year], 'ii')['count'];
+        $submitted = (fetchRow("SELECT COUNT(*) as count FROM regulatory_reports WHERE cooperative_id = ? AND report_type = 'annual_financial' AND report_year = ? AND approval_status = 'approved'", [$coopId, $year], 'ii') ?? [])['count'] ?? 0;
         return ['submitted' => $submitted, 'required' => 1, 'compliant' => $submitted >= 1];
     }
 
     private function getRATReportingStatus($coopId, $year) {
-        $submitted = fetchRow("SELECT COUNT(*) as count FROM regulatory_reports WHERE cooperative_id = ? AND report_type = 'rat_minutes' AND report_year = ? AND approval_status = 'approved'", [$coopId, $year], 'ii')['count'];
+        $submitted = (fetchRow("SELECT COUNT(*) as count FROM regulatory_reports WHERE cooperative_id = ? AND report_type = 'rat_minutes' AND report_year = ? AND approval_status = 'approved'", [$coopId, $year], 'ii') ?? [])['count'] ?? 0;
         return ['submitted' => $submitted, 'required' => 1, 'compliant' => $submitted >= 1];
     }
 

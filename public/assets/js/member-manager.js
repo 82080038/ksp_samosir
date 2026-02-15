@@ -63,10 +63,31 @@
                         }
                     },
                     {
-                        field: 'tanggal_daftar',
+                        field: 'tanggal_gabung',
                         label: 'Tanggal Daftar',
                         render: function(item) {
-                            return new Date(item.tanggal_daftar).toLocaleDateString('id-ID');
+                            // Use centralized helper if available, otherwise fallback
+                            if (window.KSP && window.KSP.Helpers && window.KSP.Helpers.formatDate) {
+                                return window.KSP.Helpers.formatDate(item.tanggal_gabung);
+                            }
+                            
+                            // Fallback formatting
+                            if (!item.tanggal_gabung) return '-';
+                            
+                            try {
+                                let date = new Date(item.tanggal_gabung);
+                                if (isNaN(date.getTime())) {
+                                    return item.tanggal_gabung;
+                                }
+                                return date.toLocaleDateString('id-ID', {
+                                    day: '2-digit',
+                                    month: '2-digit', 
+                                    year: 'numeric'
+                                });
+                            } catch (error) {
+                                console.warn('Date formatting error:', error);
+                                return item.tanggal_gabung || '-';
+                            }
                         }
                     }
                 ],

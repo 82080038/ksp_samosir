@@ -16,7 +16,7 @@ class CustomerServiceController extends BaseController {
         $recent_tickets = $this->getRecentTickets();
         $pending_returns = $this->getPendingReturns();
 
-        $this->render(__DIR__ . '/../views/customer_service/index.php', [
+        $this->render('customer_service/index', [
             'stats' => $stats,
             'recent_tickets' => $recent_tickets,
             'pending_returns' => $pending_returns
@@ -33,12 +33,12 @@ class CustomerServiceController extends BaseController {
         $perPage = ITEMS_PER_PAGE;
         $offset = ($page - 1) * $perPage;
 
-        $total = fetchRow("SELECT COUNT(*) as count FROM tickets")['count'];
+        $total = (fetchRow("SELECT COUNT(*) as count FROM tickets") ?? [])['count'] ?? 0;
         $totalPages = ceil($total / $perPage);
 
         $tickets = fetchAll("SELECT t.*, u.full_name as customer_name FROM tickets t LEFT JOIN users u ON t.customer_id = u.id ORDER BY t.created_at DESC LIMIT ? OFFSET ?", [$perPage, $offset], 'ii');
 
-        $this->render(__DIR__ . '/../views/customer_service/tickets.php', [
+        $this->render('customer_service/tickets', [
             'tickets' => $tickets,
             'page' => $page,
             'totalPages' => $totalPages
@@ -76,7 +76,7 @@ class CustomerServiceController extends BaseController {
 
         $customers = fetchAll("SELECT id, full_name FROM users WHERE role = 'member' ORDER BY full_name");
 
-        $this->render(__DIR__ . '/../views/customer_service/create_ticket.php', [
+        $this->render('customer_service/create_ticket', [
             'customers' => $customers
         ]);
     }
@@ -91,12 +91,12 @@ class CustomerServiceController extends BaseController {
         $perPage = ITEMS_PER_PAGE;
         $offset = ($page - 1) * $perPage;
 
-        $total = fetchRow("SELECT COUNT(*) as count FROM returns")['count'];
+        $total = (fetchRow("SELECT COUNT(*) as count FROM returns") ?? [])['count'] ?? 0;
         $totalPages = ceil($total / $perPage);
 
         $returns = fetchAll("SELECT r.*, p.no_faktur, u.full_name as customer_name FROM returns r LEFT JOIN penjualan p ON r.order_id = p.id LEFT JOIN users u ON r.customer_id = u.id ORDER BY r.created_at DESC LIMIT ? OFFSET ?", [$perPage, $offset], 'ii');
 
-        $this->render(__DIR__ . '/../views/customer_service/returns.php', [
+        $this->render('customer_service/returns', [
             'returns' => $returns,
             'page' => $page,
             'totalPages' => $totalPages
@@ -153,7 +153,7 @@ class CustomerServiceController extends BaseController {
             LIMIT 100
         ", [], '');
 
-        $this->render(__DIR__ . '/../views/customer_service/create_return.php', [
+        $this->render('customer_service/create_return', [
             'orders' => $orders
         ]);
     }
@@ -212,7 +212,7 @@ class CustomerServiceController extends BaseController {
 
         $return = fetchRow("SELECT r.*, p.no_faktur, u.full_name as customer_name, pr.full_name as processed_by_name FROM returns r LEFT JOIN penjualan p ON r.order_id = p.id LEFT JOIN users u ON r.customer_id = u.id LEFT JOIN users pr ON r.processed_by = pr.id WHERE r.id = ?", [$id], 'i');
 
-        $this->render(__DIR__ . '/../views/customer_service/process_return.php', [
+        $this->render('customer_service/process_return', [
             'return' => $return
         ]);
     }
@@ -269,12 +269,12 @@ class CustomerServiceController extends BaseController {
         $perPage = ITEMS_PER_PAGE;
         $offset = ($page - 1) * $perPage;
 
-        $total = fetchRow("SELECT COUNT(*) as count FROM refunds")['count'];
+        $total = (fetchRow("SELECT COUNT(*) as count FROM refunds") ?? [])['count'] ?? 0;
         $totalPages = ceil($total / $perPage);
 
         $refunds = fetchAll("SELECT r.*, ret.alasan_return, u.full_name as customer_name, pr.full_name as processed_by_name FROM refunds r LEFT JOIN returns ret ON r.return_id = ret.id LEFT JOIN users u ON ret.customer_id = u.id LEFT JOIN users pr ON r.processed_by = pr.id ORDER BY r.created_at DESC LIMIT ? OFFSET ?", [$perPage, $offset], 'ii');
 
-        $this->render(__DIR__ . '/../views/customer_service/refunds.php', [
+        $this->render('customer_service/refunds', [
             'refunds' => $refunds,
             'page' => $page,
             'totalPages' => $totalPages
@@ -327,7 +327,7 @@ class CustomerServiceController extends BaseController {
 
         $customers = fetchAll("SELECT id, full_name FROM users WHERE role = 'member' ORDER BY full_name");
 
-        $this->render(__DIR__ . '/../views/customer_service/communication.php', [
+        $this->render('customer_service/communication', [
             'customers' => $customers
         ]);
     }
@@ -336,20 +336,16 @@ class CustomerServiceController extends BaseController {
      * Get customer service statistics.
      */
     private function getCustomerServiceStats() {
-        $stats = [];
-
-        // Total tickets
-        $stats['total_tickets'] = fetchRow("SELECT COUNT(*) as total FROM tickets")['total'];
-
-        // Open tickets
-        $stats['open_tickets'] = fetchRow("SELECT COUNT(*) as total FROM tickets WHERE status = 'open'")['total'];
-
-        // Pending returns
-        $stats['pending_returns'] = fetchRow("SELECT COUNT(*) as total FROM returns WHERE status = 'pending'")['total'];
-
-        // Processed returns this month
-        $stats['processed_returns_month'] = fetchRow("SELECT COUNT(*) as total FROM returns WHERE MONTH(created_at) = MONTH(CURRENT_DATE) AND YEAR(created_at) = YEAR(CURRENT_DATE) AND status = 'processed'")['total'];
-
+        try {
+            $stats = [
+                'total_tickets' => (fetchRow("SELECT COUNT(*) as total FROM tickets") ?? [])['total'] ?? 0,
+                'open_tickets' => (fetchRow("SELECT COUNT(*) as total FROM tickets WHERE status = 'open'") ?? [])['total'] ?? 0,
+                'pending_returns' => (fetchRow("SELECT COUNT(*) as total FROM returns WHERE status = 'pending'") ?? [])['total'] ?? 0,
+                'processed_returns_month' => (fetchRow("SELECT COUNT(*) as total FROM returns WHERE MONTH(created_at) = MONTH(CURRENT_DATE) AND YEAR(created_at) = YEAR(CURRENT_DATE) AND status = 'processed'") ?? [])['total'] ?? 0,
+            ];
+        } catch (Exception $e) {
+            $stats = ['total_tickets' => 0, 'open_tickets' => 0, 'pending_returns' => 0, 'processed_returns_month' => 0];
+        }
         return $stats;
     }
 
@@ -357,13 +353,13 @@ class CustomerServiceController extends BaseController {
      * Get recent tickets.
      */
     private function getRecentTickets() {
-        return fetchAll("SELECT t.*, u.full_name as customer_name FROM tickets t LEFT JOIN users u ON t.customer_id = u.id ORDER BY t.created_at DESC LIMIT 5");
+        return fetchAll("SELECT t.*, u.full_name as customer_name FROM tickets t LEFT JOIN users u ON t.customer_id = u.id ORDER BY t.created_at DESC LIMIT 5") ?? [];
     }
 
     /**
      * Get pending returns.
      */
     private function getPendingReturns() {
-        return fetchAll("SELECT r.*, p.no_faktur, u.full_name as customer_name FROM returns r LEFT JOIN penjualan p ON r.order_id = p.id LEFT JOIN users u ON r.customer_id = u.id WHERE r.status = 'pending' ORDER BY r.created_at DESC LIMIT 5");
+        return fetchAll("SELECT r.*, p.no_faktur, u.full_name as customer_name FROM returns r LEFT JOIN penjualan p ON r.order_id = p.id LEFT JOIN users u ON r.customer_id = u.id WHERE r.status = 'pending' ORDER BY r.created_at DESC LIMIT 5") ?? [];
     }
 }

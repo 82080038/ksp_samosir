@@ -1,0 +1,669 @@
+openapi: 3.0.3
+info:
+  title: KSP Samosir API
+  description: REST API for KSP Samosir Cooperative Management System
+  version: 1.0.0
+  contact:
+    name: KSP Samosir Development Team
+    email: api@kspsamosir.com
+  license:
+    name: Proprietary
+
+servers:
+  - url: https://api.kspsamosir.com/v1
+    description: Production server
+  - url: http://localhost/ksp_samosir/api
+    description: Development server
+
+security:
+  - ApiKeyAuth: []
+
+paths:
+  /members:
+    get:
+      summary: Get list of members
+      description: Retrieve paginated list of cooperative members
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+          description: Page number
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+          description: Items per page
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: Search by name, member number, or NIK
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Member'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    post:
+      summary: Create new member
+      description: Register a new cooperative member
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - nama_lengkap
+                - nik
+                - tanggal_lahir
+                - jenis_kelamin
+                - alamat
+              properties:
+                nama_lengkap:
+                  type: string
+                  example: "Ahmad Samosir"
+                nik:
+                  type: string
+                  example: "3201234567890001"
+                tempat_lahir:
+                  type: string
+                  example: "Samosir"
+                tanggal_lahir:
+                  type: string
+                  format: date
+                  example: "1985-05-15"
+                jenis_kelamin:
+                  type: string
+                  enum: [L, P]
+                  example: "L"
+                alamat:
+                  type: string
+                  example: "Jl. Danau Toba No. 45"
+                no_hp:
+                  type: string
+                  example: "081234567890"
+                email:
+                  type: string
+                  format: email
+                  example: "ahmad@email.com"
+                pekerjaan:
+                  type: string
+                  example: "Petani"
+                pendapatan_bulanan:
+                  type: number
+                  example: 3500000
+      responses:
+        '201':
+          description: Member created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      no_anggota:
+                        type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /members/{id}:
+    get:
+      summary: Get member details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Member details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Member'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      summary: Update member
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nama_lengkap:
+                  type: string
+                alamat:
+                  type: string
+                no_hp:
+                  type: string
+                email:
+                  type: string
+                pekerjaan:
+                  type: string
+                pendapatan_bulanan:
+                  type: number
+      responses:
+        '200':
+          description: Member updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+
+  /loans:
+    get:
+      summary: Get loans list
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, disetujui, dicairkan, lunas, macet]
+        - name: member_id
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Loans list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Loan'
+
+    post:
+      summary: Create loan application
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - anggota_id
+                - jenis_pinjaman_id
+                - jumlah_pinjaman
+                - tenor_bulan
+              properties:
+                anggota_id:
+                  type: integer
+                jenis_pinjaman_id:
+                  type: integer
+                jumlah_pinjaman:
+                  type: number
+                tenor_bulan:
+                  type: integer
+                tujuan_pinjaman:
+                  type: string
+      responses:
+        '201':
+          description: Loan application created
+
+  /savings:
+    get:
+      summary: Get savings accounts
+      parameters:
+        - name: member_id
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Savings accounts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Saving'
+
+    post:
+      summary: Create savings account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - anggota_id
+                - jenis_simpanan_id
+                - saldo
+              properties:
+                anggota_id:
+                  type: integer
+                jenis_simpanan_id:
+                  type: integer
+                saldo:
+                  type: number
+      responses:
+        '201':
+          description: Savings account created
+
+  /analytics/kpis:
+    get:
+      summary: Get Key Performance Indicators
+      responses:
+        '200':
+          description: KPI data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total_members:
+                    type: integer
+                  total_savings:
+                    type: number
+                  total_loans:
+                    type: number
+                  active_loans_count:
+                    type: integer
+
+  /analytics/trends:
+    get:
+      summary: Get analytics trends
+      responses:
+        '200':
+          description: Trend data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  monthly_members:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        month:
+                          type: string
+                        count:
+                          type: integer
+                  monthly_loans:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        month:
+                          type: string
+                        total:
+                          type: number
+                  monthly_savings:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        month:
+                          type: string
+                        total:
+                          type: number
+
+  /ai/credit-score:
+    post:
+      summary: Calculate AI credit score
+      description: Use machine learning to calculate credit score for loan applications
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - loan_id
+              properties:
+                loan_id:
+                  type: integer
+                  description: ID of the loan application
+      responses:
+        '200':
+          description: Credit score result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  loan_id:
+                    type: integer
+                  credit_score:
+                    type: object
+                    properties:
+                      total_score:
+                        type: number
+                      grade:
+                        type: string
+                        enum: [A, B, C, D, E]
+                      risk_level:
+                        type: string
+                      recommendation:
+                        type: string
+                      factors:
+                        type: object
+                      confidence:
+                        type: number
+                  scored_at:
+                    type: string
+                    format: date-time
+
+  /inventory/items:
+    get:
+      summary: Get inventory items
+      responses:
+        '200':
+          description: Inventory items
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/InventoryItem'
+
+  /inventory/transactions:
+    get:
+      summary: Get inventory transactions
+      responses:
+        '200':
+          description: Inventory transactions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/InventoryTransaction'
+
+    post:
+      summary: Create inventory transaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - item_id
+                - tipe_transaksi
+                - jumlah
+              properties:
+                item_id:
+                  type: integer
+                gudang_id:
+                  type: integer
+                tipe_transaksi:
+                  type: string
+                  enum: [in, out, adjustment]
+                jumlah:
+                  type: integer
+                harga_satuan:
+                  type: number
+                keterangan:
+                  type: string
+                tanggal_transaksi:
+                  type: string
+                  format: date
+      responses:
+        '201':
+          description: Transaction created
+
+components:
+  schemas:
+    Member:
+      type: object
+      properties:
+        id:
+          type: integer
+        no_anggota:
+          type: string
+        nama_lengkap:
+          type: string
+        nik:
+          type: string
+        tanggal_lahir:
+          type: string
+          format: date
+        jenis_kelamin:
+          type: string
+          enum: [L, P]
+        alamat:
+          type: string
+        no_hp:
+          type: string
+        email:
+          type: string
+          format: email
+        pekerjaan:
+          type: string
+        pendapatan_bulanan:
+          type: number
+        tanggal_gabung:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: [aktif, nonaktif, keluar]
+
+    Loan:
+      type: object
+      properties:
+        id:
+          type: integer
+        no_pinjaman:
+          type: string
+        anggota_id:
+          type: integer
+        jenis_pinjaman_id:
+          type: integer
+        jumlah_pinjaman:
+          type: number
+        tenor_bulan:
+          type: integer
+        status:
+          type: string
+        tanggal_pengajuan:
+          type: string
+          format: date
+        member_name:
+          type: string
+        loan_type_name:
+          type: string
+
+    Saving:
+      type: object
+      properties:
+        id:
+          type: integer
+        no_rekening:
+          type: string
+        anggota_id:
+          type: integer
+        jenis_simpanan_id:
+          type: integer
+        saldo:
+          type: number
+        status:
+          type: string
+        member_name:
+          type: string
+        saving_type_name:
+          type: string
+
+    InventoryItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        kode_item:
+          type: string
+        nama_item:
+          type: string
+        deskripsi:
+          type: string
+        gudang_id:
+          type: integer
+        satuan:
+          type: string
+        harga_beli:
+          type: number
+        harga_jual:
+          type: number
+        stok_minimum:
+          type: integer
+        stok_tersedia:
+          type: number
+        nama_gudang:
+          type: string
+
+    InventoryTransaction:
+      type: object
+      properties:
+        id:
+          type: integer
+        item_id:
+          type: integer
+        gudang_id:
+          type: integer
+        tipe_transaksi:
+          type: string
+        jumlah:
+          type: integer
+        harga_satuan:
+          type: number
+        tanggal_transaksi:
+          type: string
+          format: date
+        nama_item:
+          type: string
+        nama_gudang:
+          type: string
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        total_pages:
+          type: integer
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: Bad Request
+              message:
+                type: string
+
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: Unauthorized
+              message:
+                type: string
+                example: Invalid API credentials
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: Not Found
+              message:
+                type: string
+                example: Resource not found
+
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: Internal Server Error
+              message:
+                type: string
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key

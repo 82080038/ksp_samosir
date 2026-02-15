@@ -1,9 +1,34 @@
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <div>
-        <h2>Dashboard Risk Management</h2>
-        <p class="text-muted">Monitoring risiko dan compliance koperasi</p>
+<?php
+// Use centralized dependency management
+require_once __DIR__ . '/../../../app/helpers/DependencyManager.php';
+
+// Initialize view with all dependencies
+$pageInfo = initView();
+$user = getCurrentUser();
+$role = $user['role'] ?? null;
+
+// Safe defaults for all risk_stats keys used in the template
+$risk_stats = $risk_stats ?? [];
+$risk_stats += ['total_alerts' => 0, 'high_severity_alerts' => 0, 'medium_risk' => 0, 'low_risk' => 0, 'resolved_today' => 0, 'overdue_invoices' => 0, 'high_risk_members' => 0];
+?>
+
+<!-- Page Header with Dynamic Title -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom" id="page-header">
+    <h1 class="h2 page-title" id="page-title" style="color: black;" data-page="risk">Manajemen Risiko</h1>
+    <div class="btn-toolbar mb-2 mb-md-0" id="page-actions">
+        <div class="btn-group me-2">
+            <button type="button" class="btn btn-sm btn-primary" onclick="refreshRiskData()">
+                <i class="bi bi-arrow-clockwise"></i> Refresh
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="exportRiskReport()">
+                <i class="bi bi-download"></i> Export
+            </button>
+        </div>
     </div>
 </div>
+
+<!-- Description -->
+<p class="text-muted mb-4">Monitoring risiko dan compliance koperasi</p>
 
 <?php if ($success = getFlashMessage('success')): ?>
     <div class="alert alert-success"><?= $success ?></div>

@@ -99,7 +99,7 @@ class PaymentController extends BaseController {
                 $stmt->close();
             });
 
-            $this->render(__DIR__ . '/../views/payment/checkout.php', [
+            $this->render('payment/checkout', [
                 'snap_token' => $snap_token,
                 'order' => $order,
                 'items' => $items
@@ -174,9 +174,9 @@ class PaymentController extends BaseController {
      */
     public function success() {
         $order_id = str_replace('ORDER-', '', $_GET['order_id'] ?? '');
-        $this->render(__DIR__ . '/../views/payment/success.php', [
+        $this->render('payment/success', [
             'order_id' => $order_id
-        ]);
+        ], false); // Standalone page
     }
 
     /**
@@ -184,9 +184,9 @@ class PaymentController extends BaseController {
      */
     public function pending() {
         $order_id = str_replace('ORDER-', '', $_GET['order_id'] ?? '');
-        $this->render(__DIR__ . '/../views/payment/pending.php', [
+        $this->render('payment/pending', [
             'order_id' => $order_id
-        ]);
+        ], false); // Standalone page
     }
 
     /**
@@ -194,9 +194,9 @@ class PaymentController extends BaseController {
      */
     public function error() {
         $order_id = str_replace('ORDER-', '', $_GET['order_id'] ?? '');
-        $this->render(__DIR__ . '/../views/payment/error.php', [
+        $this->render('payment/error', [
             'order_id' => $order_id
-        ]);
+        ], false); // Standalone page
     }
 
     /**

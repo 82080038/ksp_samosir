@@ -1,6 +1,29 @@
+<?php
+// Use centralized dependency management
+require_once __DIR__ . '/../../../app/helpers/DependencyManager.php';
+
+// Initialize view with all dependencies
+$pageInfo = initView();
+$user = getCurrentUser();
+$role = $user['role'] ?? null;
+$stats = $stats ?? ['total_tax_paid_year' => 0, 'employees_with_tax' => 0, 'pending_tax_filings' => 0, 'tax_compliance_rate' => 0];
+?>
+
+<!-- Page Header -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom" id="page-header">
+    <h1 class="h2 page-title" id="page-title" style="color: black;" data-page="tax">Perpajakan</h1>
+    <div class="btn-toolbar mb-2 mb-md-0" id="page-actions">
+        <div class="btn-group me-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="location.reload()">
+                <i class="bi bi-arrow-clockwise"></i> Refresh
+            </button>
+        </div>
+    </div>
+</div>
+
 <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
-        <h2>Dashboard Pajak</h2>
+        <h1 class="h2" style="color: black;"><?= $pageInfo['title'] ?></h1>
         <p class="text-muted">Kelola perhitungan dan pelaporan pajak koperasi</p>
     </div>
 </div>
@@ -156,9 +179,13 @@
             <div class="card-body">
                 <?php
                 $current_year = date('Y');
-                $yearly_tax = fetchRow("SELECT COALESCE(SUM(tax_amount), 0) as total FROM tax_filings WHERE YEAR(filing_date) = ?", [$current_year], 'i')['total'];
-                $monthly_tax = fetchRow("SELECT COALESCE(SUM(tax), 0) as total FROM payrolls WHERE YEAR(processed_at) = ?", [$current_year], 'i')['total'];
-                $withholding_tax = fetchRow("SELECT COALESCE(SUM(tax_amount), 0) as total FROM withholding_tax WHERE YEAR(transaction_date) = ?", [$current_year], 'i')['total'];
+                try {
+                    $yearly_tax = (fetchRow("SELECT COALESCE(SUM(tax_amount), 0) as total FROM tax_filings WHERE YEAR(filing_date) = ?", [$current_year], 'i') ?? [])['total'] ?? 0;
+                    $monthly_tax = (fetchRow("SELECT COALESCE(SUM(tax), 0) as total FROM payrolls WHERE YEAR(processed_at) = ?", [$current_year], 'i') ?? [])['total'] ?? 0;
+                    $withholding_tax = (fetchRow("SELECT COALESCE(SUM(tax_amount), 0) as total FROM withholding_tax WHERE YEAR(transaction_date) = ?", [$current_year], 'i') ?? [])['total'] ?? 0;
+                } catch (Exception $e) {
+                    $yearly_tax = $monthly_tax = $withholding_tax = 0;
+                }
                 ?>
                 <div class="row text-center">
                     <div class="col-4">

@@ -127,12 +127,3 @@
         <div id="loadingText">Loading...</div>
     </div>
 </div>
-
-<script>
-// Initialize KSP AJAX system
-$(document).ready(function() {
-    if (typeof window.KSP !== 'undefined') {
-        window.KSP.init();
-    }
-});
-</script>

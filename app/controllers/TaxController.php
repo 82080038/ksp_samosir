@@ -16,7 +16,7 @@ class TaxController extends BaseController {
         $stats = $this->getTaxStats();
         $upcoming_deadlines = $this->getUpcomingTaxDeadlines();
 
-        $this->render(__DIR__ . '/../views/tax/index.php', [
+        $this->render('tax/index', [
             'stats' => $stats,
             'upcoming_deadlines' => $upcoming_deadlines
         ]);
@@ -40,7 +40,7 @@ class TaxController extends BaseController {
             $pph21_calculations[] = array_merge($payroll, $calculation);
         }
 
-        $this->render(__DIR__ . '/../views/tax/pph21_calculation.php', [
+        $this->render('tax/pph21_calculation', [
             'pph21_calculations' => $pph21_calculations,
             'period' => $period
         ]);
@@ -67,7 +67,7 @@ class TaxController extends BaseController {
             ]);
         }
 
-        $this->render(__DIR__ . '/../views/tax/pph23_calculation.php', [
+        $this->render('tax/pph23_calculation', [
             'pph23_calculations' => $pph23_calculations,
             'period' => $period
         ]);
@@ -87,7 +87,7 @@ class TaxController extends BaseController {
         // Calculate PPh 25 (preliminary tax payment)
         $pph25_amount = $income_data['taxable_income'] * 0.25; // 25% corporate tax rate for cooperatives
 
-        $this->render(__DIR__ . '/../views/tax/pph25_calculation.php', [
+        $this->render('tax/pph25_calculation', [
             'income_data' => $income_data,
             'pph25_amount' => $pph25_amount,
             'year' => $year
@@ -105,7 +105,7 @@ class TaxController extends BaseController {
 
         $tax_data = $this->generateTaxReport($report_type, $period);
 
-        $this->render(__DIR__ . '/../views/tax/tax_reports.php', [
+        $this->render('tax/tax_reports', [
             'tax_data' => $tax_data,
             'report_type' => $report_type,
             'period' => $period
@@ -126,7 +126,7 @@ class TaxController extends BaseController {
             'withholding_tax' => $this->checkWithholdingTaxCompliance()
         ];
 
-        $this->render(__DIR__ . '/../views/tax/compliance.php', [
+        $this->render('tax/compliance', [
             'compliance_checks' => $compliance_checks
         ]);
     }
@@ -195,15 +195,15 @@ class TaxController extends BaseController {
      */
     private function calculateCooperativeTaxableIncome($year) {
         // Revenue
-        $sales_revenue = fetchRow("SELECT COALESCE(SUM(total_harga), 0) as total FROM penjualan WHERE status_pembayaran='lunas' AND YEAR(tanggal_penjualan) = ?", [$year], 'i')['total'];
-        $interest_income = fetchRow("SELECT COALESCE(SUM(jumlah), 0) as total FROM transaksi_simpanan WHERE jenis_transaksi='bunga' AND YEAR(tanggal_transaksi) = ?", [$year], 'i')['total'];
+        $sales_revenue = (fetchRow("SELECT COALESCE(SUM(total_harga), 0) as total FROM penjualan WHERE status_pembayaran='lunas' AND YEAR(tanggal_penjualan) = ?", [$year], 'i') ?? [])['total'] ?? 0;
+        $interest_income = (fetchRow("SELECT COALESCE(SUM(jumlah), 0) as total FROM transaksi_simpanan WHERE jenis_transaksi='bunga' AND YEAR(tanggal_transaksi) = ?", [$year], 'i') ?? [])['total'] ?? 0;
 
         $total_revenue = $sales_revenue + $interest_income;
 
         // Expenses
-        $salary_expenses = fetchRow("SELECT COALESCE(SUM(net_salary), 0) as total FROM payrolls WHERE YEAR(processed_at) = ?", [$year], 'i')['total'];
-        $operational_costs = fetchRow("SELECT COALESCE(SUM(jumlah), 0) as total FROM operational_costs WHERE YEAR(tanggal) = ?", [$year], 'i')['total'];
-        $interest_expenses = fetchRow("SELECT COALESCE(SUM(bunga), 0) as total FROM angsuran WHERE YEAR(tanggal_bayar) = ?", [$year], 'i')['total'];
+        $salary_expenses = (fetchRow("SELECT COALESCE(SUM(net_salary), 0) as total FROM payrolls WHERE YEAR(processed_at) = ?", [$year], 'i') ?? [])['total'] ?? 0;
+        $operational_costs = (fetchRow("SELECT COALESCE(SUM(jumlah), 0) as total FROM operational_costs WHERE YEAR(tanggal) = ?", [$year], 'i') ?? [])['total'] ?? 0;
+        $interest_expenses = (fetchRow("SELECT COALESCE(SUM(bunga), 0) as total FROM angsuran WHERE YEAR(tanggal_bayar) = ?", [$year], 'i') ?? [])['total'] ?? 0;
 
         $total_expenses = $salary_expenses + $operational_costs + $interest_expenses;
 
@@ -230,9 +230,9 @@ class TaxController extends BaseController {
         $stats = [];
 
         $current_year = date('Y');
-        $stats['total_tax_paid_year'] = fetchRow("SELECT COALESCE(SUM(tax_amount), 0) as total FROM tax_filings WHERE YEAR(filing_date) = ?", [$current_year], 'i')['total'];
-        $stats['pending_tax_filings'] = fetchRow("SELECT COUNT(*) as total FROM tax_filings WHERE status = 'pending'")['total'];
-        $stats['employees_with_tax'] = fetchRow("SELECT COUNT(DISTINCT employee_id) as total FROM payrolls WHERE tax > 0 AND YEAR(processed_at) = ?", [$current_year], 'i')['total'];
+        $stats['total_tax_paid_year'] = (fetchRow("SELECT COALESCE(SUM(tax_amount), 0) as total FROM tax_filings WHERE YEAR(filing_date) = ?", [$current_year], 'i') ?? [])['total'] ?? 0;
+        $stats['pending_tax_filings'] = (fetchRow("SELECT COUNT(*) as total FROM tax_filings WHERE status = 'pending'") ?? [])['total'] ?? 0;
+        $stats['employees_with_tax'] = (fetchRow("SELECT COUNT(DISTINCT employee_id) as total FROM payrolls WHERE tax > 0 AND YEAR(processed_at) = ?", [$current_year], 'i') ?? [])['total'] ?? 0;
         $stats['tax_compliance_rate'] = $this->calculateTaxComplianceRate();
 
         return $stats;
@@ -360,7 +360,7 @@ class TaxController extends BaseController {
      * Check withholding tax compliance.
      */
     private function checkWithholdingTaxCompliance() {
-        $unreported_withholding = fetchRow("SELECT COUNT(*) as total FROM withholding_tax WHERE reported = 0 AND created_at >= DATE_SUB(CURDATE(), INTERVAL 3 MONTH)")['total'];
+        $unreported_withholding = (fetchRow("SELECT COUNT(*) as total FROM withholding_tax WHERE reported = 0 AND created_at >= DATE_SUB(CURDATE(), INTERVAL 3 MONTH)") ?? [])['total'] ?? 0;
 
         return [
             'status' => $unreported_withholding == 0 ? 'compliant' : 'warning',
@@ -373,7 +373,7 @@ class TaxController extends BaseController {
      */
     private function calculateTaxComplianceRate() {
         $total_required_filings = 12; // Monthly filings for a year
-        $completed_filings = fetchRow("SELECT COUNT(*) as total FROM tax_filings WHERE YEAR(filing_date) = YEAR(CURDATE())")['total'];
+        $completed_filings = (fetchRow("SELECT COUNT(*) as total FROM tax_filings WHERE YEAR(filing_date) = YEAR(CURDATE())") ?? [])['total'] ?? 0;
 
         return $total_required_filings > 0 ? min(100, ($completed_filings / $total_required_filings) * 100) : 0;
     }
@@ -382,14 +382,14 @@ class TaxController extends BaseController {
      * Get monthly PPh 21 data.
      */
     private function getMonthlyPPh21Data($period) {
-        return fetchAll("SELECT SUM(tax) as total_pph21, COUNT(*) as employee_count FROM payrolls WHERE period = ? AND status = 'processed'", [$period]);
+        return fetchAll("SELECT SUM(tax) as total_pph21, COUNT(*) as employee_count FROM payrolls WHERE period = ? AND status = 'processed'", [$period]) ?? [];
     }
 
     /**
      * Get monthly PPh 23 data.
      */
     private function getMonthlyPPh23Data($period) {
-        return fetchAll("SELECT SUM(amount * 0.02) as total_pph23, COUNT(*) as transaction_count FROM service_payments WHERE DATE_FORMAT(payment_date, '%Y-%m') = ?", [$period]);
+        return fetchAll("SELECT SUM(amount * 0.02) as total_pph23, COUNT(*) as transaction_count FROM service_payments WHERE DATE_FORMAT(payment_date, '%Y-%m') = ?", [$period]) ?? [];
     }
 
     /**
@@ -397,9 +397,9 @@ class TaxController extends BaseController {
      */
     private function getComplianceReportData($period) {
         return [
-            'pph21_filings' => fetchRow("SELECT COUNT(*) as total FROM tax_filings WHERE tax_type = 'pph21' AND period = ?", [$period], 's')['total'],
-            'pph23_filings' => fetchRow("SELECT COUNT(*) as total FROM tax_filings WHERE tax_type = 'pph23' AND period = ?", [$period], 's')['total'],
-            'pph25_payments' => fetchRow("SELECT COUNT(*) as total FROM tax_payments WHERE tax_type = 'pph25' AND YEAR(payment_date) = ?", [$period], 'i')['total']
+            'pph21_filings' => (fetchRow("SELECT COUNT(*) as total FROM tax_filings WHERE tax_type = 'pph21' AND period = ?", [$period], 's') ?? [])['total'] ?? 0,
+            'pph23_filings' => (fetchRow("SELECT COUNT(*) as total FROM tax_filings WHERE tax_type = 'pph23' AND period = ?", [$period], 's') ?? [])['total'] ?? 0,
+            'pph25_payments' => (fetchRow("SELECT COUNT(*) as total FROM tax_payments WHERE tax_type = 'pph25' AND YEAR(payment_date) = ?", [$period], 'i') ?? [])['total'] ?? 0
         ];
     }
 }

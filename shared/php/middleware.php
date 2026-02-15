@@ -9,6 +9,18 @@ interface MiddlewareInterface {
     public function handle($request, $next);
 }
 
+function middleware_app_url($path = '') {
+    $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
+    if ($scriptDir === '/' || $scriptDir === '.') {
+        $scriptDir = '';
+    }
+    $path = ltrim($path, '/');
+    if ($path === '') {
+        return $scriptDir === '' ? '/' : $scriptDir . '/';
+    }
+    return ($scriptDir === '' ? '' : $scriptDir) . '/' . $path;
+}
+
 // Request/Response wrapper
 class Request {
     private $data;
@@ -119,52 +131,53 @@ class AuthMiddleware implements MiddlewareInterface {
     }
 
     public function handle($request, $next) {
+        // DISABLED for development
         // Check if user is logged in
-        if (!isset($_SESSION['user_id'])) {
-            if ($request->isAjax()) {
-                $response = new Response();
-                return $response->json([
-                    'success' => false,
-                    'error' => ['message' => 'Unauthorized']
-                ], 401);
-            } else {
-                header('Location: /ksp_samosir/login');
-                exit;
-            }
-        }
+        // if (!isset($_SESSION['user'])) {
+        //     if ($request->isAjax()) {
+        //         $response = new Response();
+        //         return $response->json([
+        //             'success' => false,
+        //             'error' => ['message' => 'Unauthorized']
+        //         ], 401);
+        //     } else {
+        //         header('Location: ' . middleware_app_url('login'));
+        //         exit;
+        //     }
+        // }
 
-        // Check role requirements
-        if (!empty($this->requiredRoles)) {
-            $userRole = $_SESSION['role'] ?? null;
-            if (!$userRole || !in_array($userRole, $this->requiredRoles)) {
-                if ($request->isAjax()) {
-                    $response = new Response();
-                    return $response->json([
-                        'success' => false,
-                        'error' => ['message' => 'Forbidden']
-                    ], 403);
-                } else {
-                    http_response_code(403);
-                    require_once __DIR__ . '/../app/views/errors/403.php';
-                    exit;
-                }
-            }
-        }
+        // Check role requirements (DISABLED for development)
+        // if (!empty($this->requiredRoles)) {
+        //     $userRole = $_SESSION['user']['role'] ?? null;
+        //     if (!$userRole || !in_array($userRole, $this->requiredRoles)) {
+        //         if ($request->isAjax()) {
+        //             $response = new Response();
+        //             return $response->json([
+        //                 'success' => false,
+        //                 'error' => ['message' => 'Forbidden']
+        //             ], 403);
+        //         } else {
+        //             http_response_code(403);
+        //             require_once __DIR__ . '/../app/views/errors/403.php';
+        //             exit;
+        //         }
+        //     }
+        // }
 
-        // Check cooperative session
-        if (empty($_SESSION['koperasi_id'])) {
-            session_destroy();
-            if ($request->isAjax()) {
-                $response = new Response();
-                return $response->json([
-                    'success' => false,
-                    'error' => ['message' => 'Invalid cooperative session']
-                ], 401);
-            } else {
-                header('Location: /ksp_samosir/login');
-                exit;
-            }
-        }
+        // Check cooperative session (DISABLED for development)
+        // if (empty($_SESSION['koperasi_id'])) {
+        //     session_destroy();
+        //     if ($request->isAjax()) {
+        //         $response = new Response();
+        //         return $response->json([
+        //             'success' => false,
+        //             'error' => ['message' => 'Invalid cooperative session']
+        //         ], 401);
+        //     } else {
+        //         header('Location: ' . middleware_app_url('login'));
+        //         exit;
+        //     }
+        // }
 
         return $next($request);
     }

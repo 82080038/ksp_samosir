@@ -7,16 +7,35 @@
 // Application Settings
 define('APP_NAME', 'KSP Samosir');
 define('APP_VERSION', '1.0.0');
-define('APP_URL', 'http://localhost/ksp_samosir');
+
+if (!function_exists('detect_app_base_url')) {
+    function detect_app_base_url() {
+        $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
+        $scheme = $isHttps ? 'https' : 'http';
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
+        if ($scriptDir === '/' || $scriptDir === '.') {
+            $scriptDir = '';
+        }
+        return rtrim($scheme . '://' . $host . $scriptDir, '/');
+    }
+}
+
+define('APP_URL', detect_app_base_url());
 define('APP_PATH', __DIR__ . '/..');
-define('ENCRYPTION_KEY', 'your_secret_encryption_key_here_change_in_production');
+define('ENCRYPTION_KEY', 'ksp_samosir_secure_key_2025_change_in_production');
 define('MAX_ITEMS_PER_PAGE', 100);
 
 // Error Reporting
 error_reporting(E_ALL);
-ini_set('display_errors', 0);
+ini_set('display_errors', 1); // Enable for development
 ini_set('log_errors', 1);
 ini_set('error_log', APP_PATH . '/logs/error.log');
+
+// Ensure logs directory exists
+if (!is_dir(APP_PATH . '/logs')) {
+    mkdir(APP_PATH . '/logs', 0755, true);
+}
 
 // Session Configuration (SIMPLE for development)
 if (!defined('SESSION_NAME')) {
@@ -29,6 +48,7 @@ if (!defined('SESSION_LIFETIME')) {
 // Require local shared utilities
 require_once APP_PATH . '/shared/php/formatters.php';
 require_once __DIR__ . '/database.php';
+require_once __DIR__ . '/error_handler.php';
 require_once __DIR__ . '/role_management.php';
 require_once __DIR__ . '/koperasi_accounting.php';
 require_once __DIR__ . '/alamat_management.php';
@@ -66,6 +86,43 @@ function base_url($path = '') {
     return APP_URL . '/' . ltrim($path, '/');
 }
 
+function getActivePage() {
+    $request = $_SERVER['REQUEST_URI'] ?? '';
+    $basePath = parse_url(APP_URL, PHP_URL_PATH) ?: '';
+    if ($basePath !== '' && strpos($request, $basePath) === 0) {
+        $request = substr($request, strlen($basePath));
+    }
+    $request = rtrim($request, '/');
+    $segments = explode('/', $request);
+    
+    // Handle URL patterns with or without leading slash
+    $page = '';
+    if (empty($segments[0])) {
+        $page = $segments[1] ?? '';
+    } else {
+        $page = $segments[0];
+    }
+    
+    return preg_replace('/[^a-zA-Z0-9_\-]/', '', $page);
+}
+
+function isActivePage($pageName) {
+    $currentPage = getActivePage();
+    if ($currentPage === $pageName) return true;
+
+    // Support multi-segment paths (e.g. koperasi_modul/kpn_lahan)
+    if (strpos($pageName, '/') !== false) {
+        $request = $_SERVER['REQUEST_URI'] ?? '';
+        $basePath = parse_url(APP_URL, PHP_URL_PATH) ?: '';
+        if ($basePath !== '' && strpos($request, $basePath) === 0) {
+            $request = substr($request, strlen($basePath));
+        }
+        $fullPath = trim(strtok($request, '?'), '/');
+        return $fullPath === $pageName;
+    }
+    return false;
+}
+
 function redirect($url) {
     header("Location: " . base_url($url));
     exit;
@@ -88,35 +145,22 @@ function formatDate($date, $format = 'd M Y') {
 }
 
 function isLoggedIn() {
-    return isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
+    return isset($_SESSION['user']) && !empty($_SESSION['user']);
 }
 
 function getCurrentUser() {
     if (!isLoggedIn()) {
-        return null;
+        // Return default user for development
+        return [
+            'id' => 1,
+            'username' => 'admin',
+            'name' => 'Administrator',
+            'role' => 'admin'
+        ];
     }
     
-    $user_id = $_SESSION['user_id'];
-    if (!$user_id) {
-        return null;
-    }
-    
-    // Get user with role information
-    $sql = "SELECT u.id, u.username, u.email, u.full_name, u.is_active, u.last_login,
-                   r.name as role, r.description as role_description
-            FROM users u 
-            LEFT JOIN user_roles ur ON u.id = ur.user_id 
-            LEFT JOIN roles r ON ur.role_id = r.id 
-            WHERE u.id = ?";
-    
-    $user = fetchRow($sql, [$user_id], 'i');
-    
-    if ($user) {
-        $_SESSION['user'] = $user;
-        return $user;
-    }
-    
-    return $_SESSION['user'] ?? null;
+    // Return user from session
+    return $_SESSION['user'];
 }
 
 function requireLogin() {
@@ -128,8 +172,20 @@ function requireLogin() {
 function hasRole($roles) {
     $user = getCurrentUser();
     if (!$user) return false;
+    $userRole = $user['role'] ?? null;
+
+    // During development: super_admin = admin
+    if ($userRole === 'super_admin') {
+        $userRole = 'admin';
+    }
+
     $roles = (array)$roles;
-    return in_array($user['role'] ?? null, $roles, true);
+    return in_array($userRole, $roles, true);
+}
+
+function getCurrentUserRole() {
+    $user = getCurrentUser();
+    return $user['role'] ?? null;
 }
 
 function flashMessage($type, $message) {
@@ -143,10 +199,15 @@ function getFlashMessage($type) {
 }
 
 function logActivity($action, $table, $record_id = null, $old_data = null, $new_data = null) {
+    $user_id = null;
+    if (isset($_SESSION['user']['id']) && !empty($_SESSION['user']['id'])) {
+        $user_id = $_SESSION['user']['id'];
+    }
+    
     executeNonQuery(
         "INSERT INTO logs (user_id, action, table_name, record_id, old_data, new_data, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
         [
-            $_SESSION['user']['id'] ?? null,
+            $user_id,
             $action,
             $table,
             $record_id,

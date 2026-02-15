@@ -1,7 +1,30 @@
-<div class="d-flex justify-content-between align-items-center mb-3">
+<?php
+// Use centralized dependency management
+require_once __DIR__ . '/../../../app/helpers/DependencyManager.php';
+
+// Initialize view with all dependencies
+$pageInfo = initView();
+$user = getCurrentUser();
+$role = $user['role'] ?? null;
+$backup_stats = $backup_stats ?? ['total_backups' => 0, 'total_size' => 0, 'last_backup' => null];
+$scheduled_backups = $scheduled_backups ?? [];
+$backups = $backups ?? [];
+?>
+<!-- Page Header with Dynamic Title -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom" id="page-header">
     <div>
-        <h2>Manajemen Backup & Recovery</h2>
+        <h1 class="h2 page-title" id="page-title" style="color: black;" data-page="backup">Backup & Restore</h1>
         <p class="text-muted">Kelola backup database dan disaster recovery</p>
+    </div>
+    <div class="btn-toolbar mb-2 mb-md-0" id="page-actions">
+        <div class="btn-group me-2">
+            <button type="button" class="btn btn-sm btn-primary" onclick="createBackup()">
+                <i class="bi bi-cloud-download"></i> Create Backup
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="refreshBackupList()">
+                <i class="bi bi-arrow-clockwise"></i> Refresh
+            </button>
+        </div>
     </div>
 </div>
 

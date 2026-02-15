@@ -16,7 +16,7 @@ class AIController extends BaseController {
         $fraud_stats = $this->getFraudDetectionStats();
         $recent_recommendations = $this->getRecentRecommendations();
 
-        $this->render(__DIR__ . '/../views/ai/index.php', [
+        $this->render('ai/index', [
             'recommendation_stats' => $recommendation_stats,
             'fraud_stats' => $fraud_stats,
             'recent_recommendations' => $recent_recommendations
@@ -69,7 +69,7 @@ class AIController extends BaseController {
         $limit = intval($_GET['limit'] ?? 5);
 
         if (!$user_id) {
-            $this->render(__DIR__ . '/../views/ai/personalized_recommendations.php', [
+            $this->render('ai/personalized_recommendations', [
                 'error' => 'User ID required'
             ]);
             return;
@@ -78,7 +78,7 @@ class AIController extends BaseController {
         $recommendations = $this->generateProductRecommendations($user_id, $limit);
         $user_purchase_history = $this->getUserPurchaseHistory($user_id);
 
-        $this->render(__DIR__ . '/../views/ai/personalized_recommendations.php', [
+        $this->render('ai/personalized_recommendations', [
             'recommendations' => $recommendations,
             'user_purchase_history' => $user_purchase_history,
             'user_id' => $user_id
@@ -148,14 +148,14 @@ class AIController extends BaseController {
      * Get popular products for recommendations.
      */
     private function getPopularProducts($limit = 10) {
-        return fetchAll("SELECT pr.id, pr.nama_produk, pr.harga_jual, COUNT(dp.jumlah) as total_sold FROM produk pr LEFT JOIN detail_penjualan dp ON pr.id = dp.produk_id WHERE pr.is_active = 1 GROUP BY pr.id ORDER BY total_sold DESC LIMIT ?", [$limit], 'i');
+        return fetchAll("SELECT pr.id, pr.nama_produk, pr.harga_jual, COUNT(dp.jumlah) as total_sold FROM produk pr LEFT JOIN detail_penjualan dp ON pr.id = dp.produk_id WHERE pr.is_active = 1 GROUP BY pr.id ORDER BY total_sold DESC LIMIT ?", [$limit], 'i') ?? [];
     }
 
     /**
      * Get user purchase history.
      */
     private function getUserPurchaseHistory($user_id) {
-        return fetchAll("SELECT pr.nama_produk, SUM(dp.jumlah) as quantity, SUM(dp.subtotal) as total_spent, MAX(p.tanggal_penjualan) as last_purchase FROM detail_penjualan dp LEFT JOIN penjualan p ON dp.penjualan_id = p.id LEFT JOIN produk pr ON dp.produk_id = pr.id WHERE p.pelanggan_id = ? GROUP BY dp.produk_id ORDER BY last_purchase DESC LIMIT 10", [$user_id], 'i');
+        return fetchAll("SELECT pr.nama_produk, SUM(dp.jumlah) as quantity, SUM(dp.subtotal) as total_spent, MAX(p.tanggal_penjualan) as last_purchase FROM detail_penjualan dp LEFT JOIN penjualan p ON dp.penjualan_id = p.id LEFT JOIN produk pr ON dp.produk_id = pr.id WHERE p.pelanggan_id = ? GROUP BY dp.produk_id ORDER BY last_purchase DESC LIMIT 10", [$user_id], 'i') ?? [];
     }
 
     /**
@@ -321,8 +321,8 @@ class AIController extends BaseController {
     private function getRecommendationStats() {
         $stats = [];
 
-        $stats['total_recommendations_generated'] = fetchRow("SELECT COUNT(*) as total FROM ai_recommendations WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)")['total'];
-        $stats['unique_users_recommended'] = fetchRow("SELECT COUNT(DISTINCT user_id) as total FROM ai_recommendations WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)")['total'];
+        $stats['total_recommendations_generated'] = (fetchRow("SELECT COUNT(*) as total FROM ai_recommendations WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)") ?? [])['total'] ?? 0;
+        $stats['unique_users_recommended'] = (fetchRow("SELECT COUNT(DISTINCT user_id) as total FROM ai_recommendations WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)") ?? [])['total'] ?? 0;
         $stats['conversion_rate'] = $this->calculateRecommendationConversionRate();
 
         return $stats;
@@ -334,9 +334,9 @@ class AIController extends BaseController {
     private function getFraudDetectionStats() {
         $stats = [];
 
-        $stats['total_alerts_today'] = fetchRow("SELECT COUNT(*) as total FROM ai_fraud_alerts WHERE DATE(created_at) = CURDATE()")['total'];
-        $stats['high_risk_alerts'] = fetchRow("SELECT COUNT(*) as total FROM ai_fraud_alerts WHERE risk_level = 'high' AND status = 'active'")['total'];
-        $stats['resolved_alerts'] = fetchRow("SELECT COUNT(*) as total FROM ai_fraud_alerts WHERE status = 'resolved'")['total'];
+        $stats['total_alerts_today'] = (fetchRow("SELECT COUNT(*) as total FROM ai_fraud_alerts WHERE DATE(created_at) = CURDATE()") ?? [])['total'] ?? 0;
+        $stats['high_risk_alerts'] = (fetchRow("SELECT COUNT(*) as total FROM ai_fraud_alerts WHERE risk_level = 'high' AND status = 'active'") ?? [])['total'] ?? 0;
+        $stats['resolved_alerts'] = (fetchRow("SELECT COUNT(*) as total FROM ai_fraud_alerts WHERE status = 'resolved'") ?? [])['total'] ?? 0;
 
         return $stats;
     }
@@ -345,7 +345,7 @@ class AIController extends BaseController {
      * Get recent recommendations.
      */
     private function getRecentRecommendations() {
-        return fetchAll("SELECT ar.*, u.full_name as user_name FROM ai_recommendations ar LEFT JOIN users u ON ar.user_id = u.id ORDER BY ar.created_at DESC LIMIT 10");
+        return fetchAll("SELECT ar.*, u.full_name as user_name FROM ai_recommendations ar LEFT JOIN users u ON ar.user_id = u.id ORDER BY ar.created_at DESC LIMIT 10") ?? [];
     }
 
     /**

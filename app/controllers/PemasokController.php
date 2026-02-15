@@ -16,7 +16,7 @@ class PemasokController extends BaseController {
         $recent_pos = $this->getRecentPurchaseOrders();
         $pending_invoices = $this->getPendingInvoices();
 
-        $this->render(__DIR__ . '/../views/pemasok/index.php', [
+        $this->render('pemasok/index', [
             'stats' => $stats,
             'recent_pos' => $recent_pos,
             'pending_invoices' => $pending_invoices
@@ -33,7 +33,7 @@ class PemasokController extends BaseController {
         $perPage = ITEMS_PER_PAGE;
         $offset = ($page - 1) * $perPage;
 
-        $total = fetchRow("SELECT COUNT(*) as count FROM suppliers")['count'];
+        $total = (fetchRow("SELECT COUNT(*) as count FROM suppliers") ?? [])['count'] ?? 0;
         $totalPages = ceil($total / $perPage);
 
         $suppliers = fetchAll("
@@ -58,7 +58,7 @@ class PemasokController extends BaseController {
             LIMIT ? OFFSET ?
         ", [$perPage, $offset], 'ii');
 
-        $this->render(__DIR__ . '/../views/pemasok/suppliers.php', [
+        $this->render('pemasok/suppliers', [
             'suppliers' => $suppliers,
             'page' => $page,
             'totalPages' => $totalPages
@@ -90,7 +90,7 @@ class PemasokController extends BaseController {
             redirect('pemasok/suppliers');
         }
 
-        $this->render(__DIR__ . '/../views/pemasok/create_supplier.php');
+        $this->render('pemasok/create_supplier');
     }
 
     /**
@@ -103,12 +103,12 @@ class PemasokController extends BaseController {
         $perPage = ITEMS_PER_PAGE;
         $offset = ($page - 1) * $perPage;
 
-        $total = fetchRow("SELECT COUNT(*) as count FROM purchase_orders")['count'];
+        $total = (fetchRow("SELECT COUNT(*) as count FROM purchase_orders") ?? [])['count'] ?? 0;
         $totalPages = ceil($total / $perPage);
 
         $pos = fetchAll("SELECT po.*, s.nama_perusahaan as supplier_name FROM purchase_orders po LEFT JOIN suppliers s ON po.supplier_id = s.id ORDER BY po.created_at DESC LIMIT ? OFFSET ?", [$perPage, $offset], 'ii');
 
-        $this->render(__DIR__ . '/../views/pemasok/purchase_orders.php', [
+        $this->render('pemasok/purchase_orders', [
             'pos' => $pos,
             'page' => $page,
             'totalPages' => $totalPages
@@ -171,7 +171,7 @@ class PemasokController extends BaseController {
         $suppliers = fetchAll("SELECT id, nama_perusahaan FROM suppliers WHERE status = 'aktif' ORDER BY nama_perusahaan");
         $products = fetchAll("SELECT id, nama_produk, kode_produk FROM produk WHERE is_active = 1 ORDER BY nama_produk");
 
-        $this->render(__DIR__ . '/../views/pemasok/create_po.php', [
+        $this->render('pemasok/create_po', [
             'suppliers' => $suppliers,
             'products' => $products
         ]);
@@ -187,12 +187,12 @@ class PemasokController extends BaseController {
         $perPage = ITEMS_PER_PAGE;
         $offset = ($page - 1) * $perPage;
 
-        $total = fetchRow("SELECT COUNT(*) as count FROM supplier_invoices")['count'];
+        $total = (fetchRow("SELECT COUNT(*) as count FROM supplier_invoices") ?? [])['count'] ?? 0;
         $totalPages = ceil($total / $perPage);
 
         $invoices = fetchAll("SELECT si.*, s.nama_perusahaan as supplier_name, po.nomor_po FROM supplier_invoices si LEFT JOIN suppliers s ON si.supplier_id = s.id LEFT JOIN purchase_orders po ON si.po_id = po.id ORDER BY si.created_at DESC LIMIT ? OFFSET ?", [$perPage, $offset], 'ii');
 
-        $this->render(__DIR__ . '/../views/pemasok/invoices.php', [
+        $this->render('pemasok/invoices', [
             'invoices' => $invoices,
             'page' => $page,
             'totalPages' => $totalPages
@@ -206,16 +206,16 @@ class PemasokController extends BaseController {
         $stats = [];
 
         // Total suppliers
-        $stats['total_suppliers'] = fetchRow("SELECT COUNT(*) as total FROM suppliers WHERE status = 'aktif'")['total'];
+        $stats['total_suppliers'] = (fetchRow("SELECT COUNT(*) as total FROM suppliers WHERE status = 'aktif'") ?? [])['total'] ?? 0;
 
         // Total POs this month
-        $stats['pos_this_month'] = fetchRow("SELECT COUNT(*) as total FROM purchase_orders WHERE MONTH(created_at) = MONTH(CURRENT_DATE) AND YEAR(created_at) = YEAR(CURRENT_DATE)")['total'];
+        $stats['pos_this_month'] = (fetchRow("SELECT COUNT(*) as total FROM purchase_orders WHERE MONTH(created_at) = MONTH(CURRENT_DATE) AND YEAR(created_at) = YEAR(CURRENT_DATE)") ?? [])['total'] ?? 0;
 
         // Total invoice value pending
-        $stats['pending_invoice_value'] = fetchRow("SELECT COALESCE(SUM(total_nilai), 0) as total FROM supplier_invoices WHERE status_pembayaran = 'belum_lunas'")['total'];
+        $stats['pending_invoice_value'] = (fetchRow("SELECT COALESCE(SUM(total_nilai), 0) as total FROM supplier_invoices WHERE status_pembayaran = 'belum_lunas'") ?? [])['total'] ?? 0;
 
         // Total POs pending
-        $stats['pending_pos'] = fetchRow("SELECT COUNT(*) as total FROM purchase_orders WHERE status = 'pending'")['total'];
+        $stats['pending_pos'] = (fetchRow("SELECT COUNT(*) as total FROM purchase_orders WHERE status = 'pending'") ?? [])['total'] ?? 0;
 
         return $stats;
     }
@@ -224,14 +224,14 @@ class PemasokController extends BaseController {
      * Get recent purchase orders.
      */
     private function getRecentPurchaseOrders() {
-        return fetchAll("SELECT po.*, s.nama_perusahaan as supplier_name FROM purchase_orders po LEFT JOIN suppliers s ON po.supplier_id = s.id ORDER BY po.created_at DESC LIMIT 5");
+        return fetchAll("SELECT po.*, s.nama_perusahaan as supplier_name FROM purchase_orders po LEFT JOIN suppliers s ON po.supplier_id = s.id ORDER BY po.created_at DESC LIMIT 5") ?? [];
     }
 
     /**
      * Get pending invoices.
      */
     private function getPendingInvoices() {
-        return fetchAll("SELECT si.*, s.nama_perusahaan as supplier_name FROM supplier_invoices si LEFT JOIN suppliers s ON si.supplier_id = s.id WHERE si.status_pembayaran = 'belum_lunas' ORDER BY si.tanggal_jatuh_tempo ASC LIMIT 5");
+        return fetchAll("SELECT si.*, s.nama_perusahaan as supplier_name FROM supplier_invoices si LEFT JOIN suppliers s ON si.supplier_id = s.id WHERE si.status_pembayaran = 'belum_lunas' ORDER BY si.tanggal_jatuh_tempo ASC LIMIT 5") ?? [];
     }
 
     /**

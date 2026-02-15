@@ -15,7 +15,7 @@ class PayrollController extends BaseController {
         $stats = $this->getPayrollStats();
         $recent_payrolls = $this->getRecentPayrolls();
 
-        $this->render(__DIR__ . '/../views/payroll/index.php', [
+        $this->render('payroll/index', [
             'stats' => $stats,
             'recent_payrolls' => $recent_payrolls
         ]);
@@ -31,12 +31,13 @@ class PayrollController extends BaseController {
         $perPage = ITEMS_PER_PAGE;
         $offset = ($page - 1) * $perPage;
 
-        $total = fetchRow("SELECT COUNT(*) as count FROM employees")['count'];
+        $totalResult = fetchRow("SELECT COUNT(*) as count FROM employees");
+        $total = $totalResult['count'] ?? 0;
         $totalPages = ceil($total / $perPage);
 
         $employees = fetchAll("SELECT e.*, u.full_name as supervisor_name FROM employees e LEFT JOIN users u ON e.supervisor_id = u.id ORDER BY e.created_at DESC LIMIT ? OFFSET ?", [$perPage, $offset], 'ii');
 
-        $this->render(__DIR__ . '/../views/payroll/employees.php', [
+        $this->render('payroll/employees', [
             'employees' => $employees,
             'page' => $page,
             'totalPages' => $totalPages
@@ -73,7 +74,7 @@ class PayrollController extends BaseController {
 
         $supervisors = fetchAll("SELECT id, full_name FROM users WHERE role IN ('admin', 'pengurus') ORDER BY full_name");
 
-        $this->render(__DIR__ . '/../views/payroll/create_employee.php', [
+        $this->render('payroll/create_employee', [
             'supervisors' => $supervisors
         ]);
     }
@@ -162,7 +163,7 @@ class PayrollController extends BaseController {
         // Compress data for mobile devices
         $employees = compressMobileData($employees);
 
-        $this->render(__DIR__ . '/../views/payroll/process_payroll.php', [
+        $this->render('payroll/process_payroll', [
             'employees' => $employees
         ]);
     }
@@ -177,12 +178,13 @@ class PayrollController extends BaseController {
         $perPage = ITEMS_PER_PAGE;
         $offset = ($page - 1) * $perPage;
 
-        $total = fetchRow("SELECT COUNT(*) as count FROM payrolls")['count'];
+        $totalResult = fetchRow("SELECT COUNT(*) as count FROM payrolls");
+        $total = $totalResult['count'] ?? 0;
         $totalPages = ceil($total / $perPage);
 
         $payrolls = fetchAll("SELECT p.*, e.employee_id, e.full_name FROM payrolls p LEFT JOIN employees e ON p.employee_id = e.id ORDER BY p.processed_at DESC LIMIT ? OFFSET ?", [$perPage, $offset], 'ii');
 
-        $this->render(__DIR__ . '/../views/payroll/payroll_history.php', [
+        $this->render('payroll/payroll_history', [
             'payrolls' => $payrolls,
             'page' => $page,
             'totalPages' => $totalPages
@@ -219,7 +221,7 @@ class PayrollController extends BaseController {
             'total_net' => array_sum(array_column($payrolls, 'net_salary'))
         ];
 
-        $this->render(__DIR__ . '/../views/payroll/payroll_report.php', [
+        $this->render('payroll/payroll_report', [
             'payrolls' => $payrolls,
             'totals' => $totals,
             'period' => $period,
@@ -255,10 +257,10 @@ class PayrollController extends BaseController {
     private function getPayrollStats() {
         $stats = [];
 
-        $stats['total_employees'] = fetchRow("SELECT COUNT(*) as total FROM employees WHERE status = 'active'")['total'];
-        $stats['total_payrolls_this_month'] = fetchRow("SELECT COUNT(*) as total FROM payrolls WHERE MONTH(processed_at) = MONTH(CURRENT_DATE) AND YEAR(processed_at) = YEAR(CURRENT_DATE)")['total'];
-        $stats['total_salary_paid_month'] = fetchRow("SELECT COALESCE(SUM(net_salary), 0) as total FROM payrolls WHERE MONTH(processed_at) = MONTH(CURRENT_DATE) AND YEAR(processed_at) = YEAR(CURRENT_DATE)")['total'];
-        $stats['pending_payrolls'] = fetchRow("SELECT COUNT(*) as total FROM employees WHERE status = 'active' AND id NOT IN (SELECT employee_id FROM payrolls WHERE period = DATE_FORMAT(CURRENT_DATE, '%Y-%m'))")['total'];
+        $stats['total_employees'] = fetchRow("SELECT COUNT(*) as total FROM employees WHERE status = 'active'")['total'] ?? 0;
+        $stats['total_payrolls_this_month'] = fetchRow("SELECT COUNT(*) as total FROM payrolls WHERE MONTH(processed_at) = MONTH(CURRENT_DATE) AND YEAR(processed_at) = YEAR(CURRENT_DATE)")['total'] ?? 0;
+        $stats['total_salary_paid_month'] = fetchRow("SELECT COALESCE(SUM(net_salary), 0) as total FROM payrolls WHERE MONTH(processed_at) = MONTH(CURRENT_DATE) AND YEAR(processed_at) = YEAR(CURRENT_DATE)")['total'] ?? 0;
+        $stats['pending_payrolls'] = fetchRow("SELECT COUNT(*) as total FROM employees WHERE status = 'active' AND id NOT IN (SELECT employee_id FROM payrolls WHERE period = DATE_FORMAT(CURRENT_DATE, '%Y-%m'))")['total'] ?? 0;
 
         return $stats;
     }
@@ -267,7 +269,7 @@ class PayrollController extends BaseController {
      * Get recent payrolls.
      */
     private function getRecentPayrolls() {
-        return fetchAll("SELECT p.*, e.employee_id, e.full_name FROM payrolls p LEFT JOIN employees e ON p.employee_id = e.id ORDER BY p.processed_at DESC LIMIT 10");
+        return fetchAll("SELECT p.*, e.employee_id, e.full_name FROM payrolls p LEFT JOIN employees e ON p.employee_id = e.id ORDER BY p.processed_at DESC LIMIT 10") ?? [];
     }
 
     /**

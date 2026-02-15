@@ -15,7 +15,7 @@ class AssetController extends BaseController {
         $stats = $this->getAssetStats();
         $recent_assets = $this->getRecentAssets();
 
-        $this->render(__DIR__ . '/../views/asset/index.php', [
+        $this->render('asset/index', [
             'stats' => $stats,
             'recent_assets' => $recent_assets
         ]);
@@ -31,7 +31,7 @@ class AssetController extends BaseController {
         $perPage = ITEMS_PER_PAGE;
         $offset = ($page - 1) * $perPage;
 
-        $total = fetchRow("SELECT COUNT(*) as count FROM fixed_assets")['count'];
+        $total = (fetchRow("SELECT COUNT(*) as count FROM fixed_assets") ?? [])['count'] ?? 0;
         $totalPages = ceil($total / $perPage);
 
         $assets = fetchAll("
@@ -51,7 +51,7 @@ class AssetController extends BaseController {
             LIMIT ? OFFSET ?
         ", [$perPage, $offset], 'ii');
 
-        $this->render(__DIR__ . '/../views/asset/assets.php', [
+        $this->render('asset/assets', [
             'assets' => $assets,
             'page' => $page,
             'totalPages' => $totalPages
@@ -91,7 +91,7 @@ class AssetController extends BaseController {
             redirect('asset/assets');
         }
 
-        $this->render(__DIR__ . '/../views/asset/add_asset.php');
+        $this->render('asset/add_asset');
     }
 
     /**
@@ -109,7 +109,7 @@ class AssetController extends BaseController {
         $depreciation_schedule = fetchAll("SELECT * FROM asset_depreciation WHERE asset_id = ? ORDER BY depreciation_date", [$asset_id], 'i');
         $maintenance_history = fetchAll("SELECT * FROM asset_maintenance WHERE asset_id = ? ORDER BY maintenance_date DESC", [$asset_id], 'i');
 
-        $this->render(__DIR__ . '/../views/asset/asset_detail.php', [
+        $this->render('asset/asset_detail', [
             'asset' => $asset,
             'depreciation_schedule' => $depreciation_schedule,
             'maintenance_history' => $maintenance_history
@@ -151,7 +151,7 @@ class AssetController extends BaseController {
 
         $asset = fetchRow("SELECT asset_name FROM fixed_assets WHERE id = ?", [$asset_id], 'i');
 
-        $this->render(__DIR__ . '/../views/asset/record_maintenance.php', [
+        $this->render('asset/record_maintenance', [
             'asset' => $asset,
             'asset_id' => $asset_id
         ]);
@@ -171,7 +171,7 @@ class AssetController extends BaseController {
         // Calculate totals
         $total_depreciation = array_sum(array_column($depreciation_data, 'depreciation_amount'));
 
-        $this->render(__DIR__ . '/../views/asset/depreciation_report.php', [
+        $this->render('asset/depreciation_report', [
             'depreciation_data' => $depreciation_data,
             'total_depreciation' => $total_depreciation,
             'period' => $period
@@ -226,14 +226,19 @@ class AssetController extends BaseController {
      * Get asset statistics.
      */
     private function getAssetStats() {
-        $stats = [];
-
-        $stats['total_assets'] = fetchRow("SELECT COUNT(*) as total FROM fixed_assets")['total'];
-        $stats['total_asset_value'] = fetchRow("SELECT COALESCE(SUM(acquisition_cost), 0) as total FROM fixed_assets")['total'];
-        $stats['total_depreciation'] = fetchRow("SELECT COALESCE(SUM(accumulated_depreciation), 0) as total FROM asset_depreciation ad LEFT JOIN fixed_assets fa ON ad.asset_id = fa.id WHERE fa.condition_status != 'disposed'")['total'];
-        $stats['net_book_value'] = $stats['total_asset_value'] - $stats['total_depreciation'];
-        $stats['assets_needing_maintenance'] = fetchRow("SELECT COUNT(*) as total FROM fixed_assets WHERE condition_status IN ('poor', 'critical') OR last_maintenance_date < DATE_SUB(CURDATE(), INTERVAL 6 MONTH)")['total'];
-
+        try {
+            $totalVal = (fetchRow("SELECT COALESCE(SUM(acquisition_cost), 0) as total FROM fixed_assets") ?? [])['total'] ?? 0;
+            $totalDepr = (fetchRow("SELECT COALESCE(SUM(accumulated_depreciation), 0) as total FROM asset_depreciation ad LEFT JOIN fixed_assets fa ON ad.asset_id = fa.id WHERE fa.condition_status != 'disposed'") ?? [])['total'] ?? 0;
+            $stats = [
+                'total_assets' => (fetchRow("SELECT COUNT(*) as total FROM fixed_assets") ?? [])['total'] ?? 0,
+                'total_asset_value' => $totalVal,
+                'total_depreciation' => $totalDepr,
+                'net_book_value' => $totalVal - $totalDepr,
+                'assets_needing_maintenance' => (fetchRow("SELECT COUNT(*) as total FROM fixed_assets WHERE condition_status IN ('poor', 'critical') OR last_maintenance_date < DATE_SUB(CURDATE(), INTERVAL 6 MONTH)") ?? [])['total'] ?? 0,
+            ];
+        } catch (Exception $e) {
+            $stats = ['total_assets' => 0, 'total_asset_value' => 0, 'total_depreciation' => 0, 'net_book_value' => 0, 'assets_needing_maintenance' => 0];
+        }
         return $stats;
     }
 
@@ -241,7 +246,7 @@ class AssetController extends BaseController {
      * Get recent assets.
      */
     private function getRecentAssets() {
-        return fetchAll("SELECT fa.*, u.full_name as created_by_name FROM fixed_assets fa LEFT JOIN users u ON fa.created_by = u.id ORDER BY fa.created_at DESC LIMIT 5");
+        return fetchAll("SELECT fa.*, u.full_name as created_by_name FROM fixed_assets fa LEFT JOIN users u ON fa.created_by = u.id ORDER BY fa.created_at DESC LIMIT 5") ?? [];
     }
 
     /**

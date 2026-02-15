@@ -1,9 +1,14 @@
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>Laporan Pengawas</h2>
-    <div class="btn-group">
-        <button class="btn btn-primary btn-sm" onclick="createReport()">Buat Laporan Baru</button>
-        <a href="<?= base_url('pengawas') ?>" class="btn btn-outline-secondary btn-sm">Kembali ke Dashboard</a>
+<!-- Page Header -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom" id="page-header">
+    <h1 class="h2 page-title" id="page-title" style="color: black;" data-page="pengawas-reports">Laporan Pengawas</h1>
+    <div class="btn-toolbar mb-2 mb-md-0" id="page-actions">
+        <div class="btn-group me-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="location.reload()">
+                <i class="bi bi-arrow-clockwise"></i> Refresh
+            </button>
+        </div>
     </div>
+</div>
 </div>
 
 <?php if ($success = getFlashMessage('success')): ?>

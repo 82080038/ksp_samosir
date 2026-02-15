@@ -13,7 +13,7 @@ class AdvancedMonitoringController extends BaseController {
     public function __construct() {
         parent::__construct();
         $this->monitoring = getMonitoringSystem();
-        $this->pdo = getConnection();
+        $this->pdo = getLegacyConnection();
     }
 
     /**
@@ -38,7 +38,7 @@ class AdvancedMonitoringController extends BaseController {
         // Get real-time alerts
         $alerts = $this->getActiveAlerts();
 
-        $this->render(__DIR__ . '/../views/monitoring/advanced_dashboard.php', [
+        $this->render('monitoring/advanced_dashboard', [
             'dashboardData' => $dashboardData,
             'insights' => $insights,
             'recommendations' => $recommendations,
@@ -56,7 +56,7 @@ class AdvancedMonitoringController extends BaseController {
         $phase = $phase ?? ($_GET['phase'] ?? 'phase1');
         $phaseData = $this->getPhaseAnalyticsData($phase);
 
-        $this->render(__DIR__ . '/../views/monitoring/phase_analytics.php', [
+        $this->render('monitoring/phase_analytics', [
             'phase' => $phase,
             'phaseData' => $phaseData
         ]);
@@ -75,7 +75,7 @@ class AdvancedMonitoringController extends BaseController {
         $investmentBreakdown = $this->getInvestmentBreakdown();
         $costBenefitAnalysis = $this->getCostBenefitAnalysis();
 
-        $this->render(__DIR__ . '/../views/monitoring/roi_tracker.php', [
+        $this->render('monitoring/roi_tracker', [
             'roiAnalysis' => $roiAnalysis,
             'investmentBreakdown' => $investmentBreakdown,
             'costBenefitAnalysis' => $costBenefitAnalysis,
@@ -94,7 +94,7 @@ class AdvancedMonitoringController extends BaseController {
         $scenarios = $this->getScenarioAnalysis();
         $riskAssessments = $this->getRiskPredictions();
 
-        $this->render(__DIR__ . '/../views/monitoring/predictive_analytics.php', [
+        $this->render('monitoring/predictive_analytics', [
             'predictions' => $predictions,
             'scenarios' => $scenarios,
             'riskAssessments' => $riskAssessments
@@ -111,7 +111,7 @@ class AdvancedMonitoringController extends BaseController {
         $abTests = $this->getActiveABTests();
         $automationStatus = $this->getAutomationStatus();
 
-        $this->render(__DIR__ . '/../views/monitoring/optimization_engine.php', [
+        $this->render('monitoring/optimization_engine', [
             'currentOptimizations' => $currentOptimizations,
             'abTests' => $abTests,
             'automationStatus' => $automationStatus

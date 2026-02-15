@@ -1,19 +1,28 @@
 <?php
 require_once __DIR__ . '/BaseController.php';
-require_once __DIR__ . '/../config/config.php';
 
 class SimpananController extends BaseController {
     public function index() {
         // $this->ensureLoginAndRole([.*]); // DISABLED for development
-        $simpanan = fetchAll("SELECT s.id, s.no_rekening, s.saldo, s.status, a.nama_lengkap AS anggota, js.nama_simpanan FROM simpanan s LEFT JOIN anggota a ON s.anggota_id=a.id LEFT JOIN jenis_simpanan js ON s.jenis_simpanan_id=js.id ORDER BY s.created_at DESC");
-        $this->render(__DIR__ . '/../views/simpanan/index.php', ['simpanan' => $simpanan]);
+        
+        // Calculate statistics
+        $stats = [
+            'total_rekening' => (fetchRow("SELECT COUNT(*) as count FROM simpanan") ?? [])['count'] ?? 0,
+            'total_saldo' => (fetchRow("SELECT COALESCE(SUM(saldo), 0) as total FROM simpanan WHERE status = 'aktif'") ?? [])['total'] ?? 0,
+            'rekening_aktif' => (fetchRow("SELECT COUNT(*) as count FROM simpanan WHERE status = 'aktif'") ?? [])['count'] ?? 0,
+            'rekening_nonaktif' => (fetchRow("SELECT COUNT(*) as count FROM simpanan WHERE status != 'aktif'") ?? [])['count'] ?? 0,
+            'setoran_bulan_ini' => (fetchRow("SELECT COALESCE(SUM(jumlah), 0) as total FROM transaksi_simpanan WHERE jenis_transaksi = 'setoran' AND MONTH(tanggal_transaksi) = MONTH(CURRENT_DATE) AND YEAR(tanggal_transaksi) = YEAR(CURRENT_DATE)") ?? [])['total'] ?? 0
+        ];
+        
+        $simpanan = fetchAll("SELECT s.id, s.no_rekening, s.saldo, s.status, s.tanggal_buka, a.nama_lengkap AS anggota, js.nama_simpanan FROM simpanan s LEFT JOIN anggota a ON s.anggota_id=a.id LEFT JOIN jenis_simpanan js ON s.jenis_simpanan_id=js.id ORDER BY s.created_at DESC");
+        $this->render('simpanan/index', ['simpanan' => $simpanan, 'stats' => $stats]);
     }
 
     public function create() {
         // $this->ensureLoginAndRole([.*]); // DISABLED for development
         $anggota = fetchAll("SELECT id, nama_lengkap FROM anggota WHERE status='aktif' ORDER BY nama_lengkap");
         $jenis = fetchAll("SELECT id, nama_simpanan FROM jenis_simpanan WHERE is_active=1 ORDER BY nama_simpanan");
-        $this->render(__DIR__ . '/../views/simpanan/create.php', ['anggota' => $anggota, 'jenis' => $jenis]);
+        $this->render('simpanan/create', ['anggota' => $anggota, 'jenis' => $jenis]);
     }
 
     public function store() {
@@ -52,7 +61,7 @@ class SimpananController extends BaseController {
         }
         $anggota = fetchAll("SELECT id, nama_lengkap FROM anggota WHERE status='aktif' ORDER BY nama_lengkap");
         $jenis = fetchAll("SELECT id, nama_simpanan FROM jenis_simpanan WHERE is_active=1 ORDER BY nama_simpanan");
-        $this->render(__DIR__ . '/../views/simpanan/edit.php', ['simpanan' => $row, 'anggota' => $anggota, 'jenis' => $jenis]);
+        $this->render('simpanan/edit', ['simpanan' => $row, 'anggota' => $anggota, 'jenis' => $jenis]);
     }
 
     public function update($id) {
@@ -93,7 +102,7 @@ class SimpananController extends BaseController {
 
     public function transaksi() {
         // $this->ensureLoginAndRole([.*]); // DISABLED for development
-        $this->render(__DIR__ . '/../views/simpanan/transaksi.php');
+        $this->render('simpanan/transaksi');
     }
 
     private function collectInput() {

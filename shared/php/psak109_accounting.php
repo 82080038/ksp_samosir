@@ -434,10 +434,10 @@ class PSAK109Accounting {
      */
     public function closeAccountingPeriod($coopId, $period) {
         // Validate all entries are posted
-        $unpostedCount = fetchRow("
+        $unpostedCount = (fetchRow("
             SELECT COUNT(*) as count FROM journal_entries
             WHERE cooperative_id = ? AND entry_date LIKE ? AND status != 'posted'
-        ", [$coopId, $period . '%'], 's')['count'];
+        ", [$coopId, $period . '%'], 's') ?? [])['count'] ?? 0;
 
         if ($unpostedCount > 0) {
             return ['success' => false, 'error' => 'Cannot close period with unposted entries'];

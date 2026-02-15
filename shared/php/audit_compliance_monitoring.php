@@ -267,13 +267,13 @@ class AuditComplianceMonitoring {
         $issues = [];
 
         // Check board composition
-        $boardMembers = fetchRow("SELECT COUNT(*) as count FROM governance_bodies WHERE cooperative_id = ? AND body_type = 'board_of_directors' AND status = 'active'", [$coopId], 'i')['count'];
+        $boardMembers = (fetchRow("SELECT COUNT(*) as count FROM governance_bodies WHERE cooperative_id = ? AND body_type = 'board_of_directors' AND status = 'active'", [$coopId], 'i') ?? [])['count'] ?? 0;
         if ($boardMembers < 3) {
             $issues[] = ['severity' => 'critical', 'issue' => 'Insufficient board members (minimum 3 required)', 'reference' => 'UU 25/1992 Article 18'];
         }
 
         // Check supervisory board
-        $supervisors = fetchRow("SELECT COUNT(*) as count FROM governance_bodies WHERE cooperative_id = ? AND body_type = 'supervisory_board' AND status = 'active'", [$coopId], 'i')['count'];
+        $supervisors = (fetchRow("SELECT COUNT(*) as count FROM governance_bodies WHERE cooperative_id = ? AND body_type = 'supervisory_board' AND status = 'active'", [$coopId], 'i') ?? [])['count'] ?? 0;
         if ($supervisors < 1) {
             $issues[] = ['severity' => 'high', 'issue' => 'No active supervisory board members', 'reference' => 'UU 25/1992 Article 19'];
         }
@@ -323,7 +323,7 @@ class AuditComplianceMonitoring {
         $issues = [];
 
         // Check minimum member requirement
-        $memberCount = fetchRow("SELECT COUNT(*) as count FROM cooperative_members WHERE cooperative_id = ? AND membership_status = 'active'", [$coopId], 'i')['count'];
+        $memberCount = (fetchRow("SELECT COUNT(*) as count FROM cooperative_members WHERE cooperative_id = ? AND membership_status = 'active'", [$coopId], 'i') ?? [])['count'] ?? 0;
         if ($memberCount < 20) {
             $issues[] = ['severity' => 'critical', 'issue' => 'Below minimum member requirement (20 members)', 'reference' => 'UU 25/1992 Article 5'];
         }

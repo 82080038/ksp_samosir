@@ -73,7 +73,7 @@ function getTrialBalance($date_from, $date_to) {
             GROUP BY coa.id, coa.code, coa.name, coa.type
             ORDER BY coa.code";
     
-    return fetchAll($sql, [$date_from, $date_to], 'ss');
+    return fetchAll($sql, [$date_from, $date_to], 'ss') ?? [];
 }
 
 /**
@@ -126,7 +126,7 @@ function getBalanceSheet($as_of_date) {
             GROUP BY coa.id, coa.code, coa.name, coa.type
             ORDER BY coa.code";
     
-    return fetchAll($sql, [$as_of_date], 's');
+    return fetchAll($sql, [$as_of_date], 's') ?? [];
 }
 
 /**
@@ -192,14 +192,14 @@ function distributeSHU($shu_periode_id) {
 function recordModalPokok($anggota_id, $jumlah, $jenis, $tanggal, $description, $bukti = null) {
     runInTransaction(function($conn) use ($anggota_id, $jumlah, $jenis, $tanggal, $description, $bukti) {
         // Create journal entry for modal pokok
-        $coa_id = fetchRow("SELECT id FROM coa WHERE code = '3000'")['id'];
+        $coa_id = (fetchRow("SELECT id FROM coa WHERE code = '3000'") ?? [])['id'] ?? 0;
         
         $entries = [];
         if ($jenis === 'masuk') {
             $entries[] = ['coa_id' => $coa_id, 'debit' => $jumlah, 'credit' => 0, 'description' => "Modal pokok $anggota_id - $description"];
-            $entries[] = ['coa_id' => fetchRow("SELECT id FROM coa WHERE code = '1000'")['id'], 'debit' => 0, 'credit' => $jumlah, 'description' => "Modal pokok $anggota_id - $description"];
+            $entries[] = ['coa_id' => (fetchRow("SELECT id FROM coa WHERE code = '1000'") ?? [])['id'] ?? 0, 'debit' => 0, 'credit' => $jumlah, 'description' => "Modal pokok $anggota_id - $description"];
         } else {
-            $entries[] = ['coa_id' => fetchRow("SELECT id FROM coa WHERE code = '1000'")['id'], 'debit' => $jumlah, 'credit' => 0, 'description' => "Penarikan modal pokok $anggota_id - $description"];
+            $entries[] = ['coa_id' => (fetchRow("SELECT id FROM coa WHERE code = '1000'") ?? [])['id'] ?? 0, 'debit' => $jumlah, 'credit' => 0, 'description' => "Penarikan modal pokok $anggota_id - $description"];
             $entries[] = ['coa_id' => $coa_id, 'debit' => 0, 'credit' => $jumlah, 'description' => "Penarikan modal pokok $anggota_id - $description"];
         }
         
@@ -222,7 +222,7 @@ function getPengaturan($key = null) {
     if ($key) {
         return fetchRow("SELECT value FROM pengaturan_koperasi WHERE setting_key = ? AND is_active = 1", [$key], 's');
     }
-    return fetchAll("SELECT * FROM pengaturan_koperasi WHERE is_active = 1 ORDER BY setting_key");
+    return fetchAll("SELECT * FROM pengaturan_koperasi WHERE is_active = 1 ORDER BY setting_key") ?? [];
 }
 
 /**
